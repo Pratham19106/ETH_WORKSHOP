@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-size: 16px;
+  }
+
+  body {
+    background-color: #070714;
+    color: #f8fafc;
+    font-family: 'Share Tech Mono', 'JetBrains Mono', monospace;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+}
+
+/* Background Cyber Grid Lines Overlay */
+.cyber-grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(0, 240, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 0, 122, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Glowing Glassmorphism Cards */
+.cyber-glass {
+  background: rgba(11, 8, 30, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.cyber-glass-interactive {
+  background: rgba(11, 8, 30, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cyber-glass-interactive:hover {
+  background: rgba(20, 16, 45, 0.85);
+  border-color: rgba(255, 0, 122, 0.5);
+  box-shadow: 0 0 25px rgba(255, 0, 122, 0.35);
+}
+
+/* Glowing Neon Text & Borders */
+.glow-magenta {
+  text-shadow: 0 0 12px rgba(255, 0, 122, 0.8);
+}
+
+.glow-cyan {
+  text-shadow: 0 0 12px rgba(0, 240, 255, 0.8);
+}
+
+.glow-border-cyan {
+  box-shadow: 0 0 20px -3px rgba(0, 240, 255, 0.5);
+}
+
+.glow-border-magenta {
+  box-shadow: 0 0 20px -3px rgba(255, 0, 122, 0.5);
+}
+
+.glow-border-gold {
+  box-shadow: 0 0 20px -3px rgba(255, 230, 0, 0.5);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #070714;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 0, 122, 0.5);
+}
+
+/* Floating Ambient Keyframe Animations for Background Blockchain Elements */
+@keyframes floatSlow1 {
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-28px) rotate(6deg);
+  }
+}
+
+@keyframes floatSlow2 {
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(32px) rotate(-8deg);
+  }
+}
+
+@keyframes floatSlow3 {
+
+  0%,
+  100% {
+    transform: translateY(0px) scale(1);
+  }
+
+  50% {
+    transform: translateY(-20px) scale(1.04);
+  }
+}
+
+.animate-float-1 {
+  animation: floatSlow1 7s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: floatSlow2 9s ease-in-out infinite;
+}
+
+.animate-float-3 {
+  animation: floatSlow3 11s ease-in-out infinite;
+}
