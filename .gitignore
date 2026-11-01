@@ -7,7 +7,7 @@ frontend/node_modules/
 dist/
 frontend/dist/
 build/
-
+*.sql
 # Environment Variables & Secrets
 .env
 .env.local
@@ -24,6 +24,7 @@ blockchain/out*
 blockchain/cache*
 blockchain/broadcast*
 blockchain/lib*
+
 
 # Logs & Diagnostics
 *.log

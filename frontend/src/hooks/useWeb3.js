@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { BrowserProvider, JsonRpcProvider, Contract, Interface, formatEther } from "ethers";
 import { CONTRACT_ADDRESS, NETWORK_CONFIG, VJTITIEREDBADGE_ABI } from "../config/network";
+import { rpcManager } from "../lib/rpcManager";
 
 const contractInterface = new Interface(VJTITIEREDBADGE_ABI);
 
@@ -12,11 +13,12 @@ export const isMetaMaskInstalled = () => {
 };
 
 /**
- * Dedicated JsonRpcProvider against Tenderly Virtual Testnet for fast cached reads
+ * Get resilient read-only provider backed by current active RPC URL
  */
 export const getReadOnlyProvider = () => {
-  if (NETWORK_CONFIG.rpcUrl && !NETWORK_CONFIG.rpcUrl.includes("YOUR_TENDERLY_VIRTUAL_TESTNET_ID")) {
-    return new JsonRpcProvider(NETWORK_CONFIG.rpcUrl);
+  const activeUrl = rpcManager.getActiveRpcUrl();
+  if (activeUrl) {
+    return new JsonRpcProvider(activeUrl);
   }
   if (isMetaMaskInstalled()) {
     return new BrowserProvider(window.ethereum);
@@ -25,27 +27,37 @@ export const getReadOnlyProvider = () => {
 };
 
 /**
- * Safe eth_call reader that prevents 0x decoding errors
+ * Safe contract read call powered by RpcManager:
+ * - In-flight deduplication
+ * - Response caching
+ * - Automatic retry with exponential backoff on 429 / 5xx
+ * - Fallback to secondary provider or browser wallet if primary fails
  */
 export const safeEthCall = async (methodName, args = []) => {
   const data = contractInterface.encodeFunctionData(methodName, args);
 
-  // 1. Try Tenderly Direct JsonRpcProvider
+  // 1. Try resilient RpcManager call (handles Primary -> Secondary fallback)
   try {
-    const jsonProvider = getReadOnlyProvider();
-    const rawResult = await jsonProvider.send("eth_call", [{ to: CONTRACT_ADDRESS, data }, "latest"]);
+    const rawResult = await rpcManager.sendRpcCall("eth_call", [
+      { to: CONTRACT_ADDRESS, data },
+      "latest",
+    ]);
+
     if (rawResult && rawResult !== "0x") {
       return contractInterface.decodeFunctionResult(methodName, rawResult);
     }
   } catch (err) {
-    console.warn(`JsonRpcProvider call for ${methodName} returned error:`, err.message);
+    console.warn(`RpcManager call for ${methodName} returned error:`, err.message);
   }
 
-  // 2. Fallback to BrowserProvider
+  // 2. Fallback to BrowserProvider (MetaMask injected) if in browser
   if (isMetaMaskInstalled()) {
     try {
       const browserProvider = new BrowserProvider(window.ethereum);
-      const rawResult = await browserProvider.send("eth_call", [{ to: CONTRACT_ADDRESS, data }, "latest"]);
+      const rawResult = await browserProvider.send("eth_call", [
+        { to: CONTRACT_ADDRESS, data },
+        "latest",
+      ]);
       if (rawResult && rawResult !== "0x") {
         return contractInterface.decodeFunctionResult(methodName, rawResult);
       }
@@ -54,7 +66,7 @@ export const safeEthCall = async (methodName, args = []) => {
     }
   }
 
-  throw new Error(`Contract returned 0x for ${methodName}. Check contract address and RPC network.`);
+  throw new Error(`Contract returned 0x or failed across all providers for ${methodName}. Check contract address and RPC network.`);
 };
 
 export function useWeb3() {
@@ -64,6 +76,15 @@ export function useWeb3() {
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState(null);
+  const [rpcState, setRpcState] = useState(() => rpcManager.getState());
+
+  // Subscribe to RPC Manager state updates
+  useEffect(() => {
+    const unsubscribe = rpcManager.subscribe((newState) => {
+      setRpcState(newState);
+    });
+    return unsubscribe;
+  }, []);
 
   // Truncate address helper
   const shortenAddress = (addr) => {
@@ -71,7 +92,7 @@ export function useWeb3() {
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
   };
 
-  // Verify connected network chain ID
+  // Verify connected network chain ID (Base Sepolia 0x14a34 / 84532)
   const verifyNetwork = useCallback(async () => {
     if (!isMetaMaskInstalled()) return false;
     try {
@@ -87,18 +108,26 @@ export function useWeb3() {
     }
   }, []);
 
-  // Fetch ETH balance for connected address
+  // Fetch ETH balance with caching and failover
   const fetchBalance = useCallback(async (userAddress = account) => {
     if (!userAddress) return "0.0";
     try {
-      const provider = getReadOnlyProvider();
-      const rawBalance = await provider.getBalance(userAddress);
-      const formatted = parseFloat(formatEther(rawBalance)).toFixed(4);
+      const hexBalance = await rpcManager.sendRpcCall("eth_getBalance", [userAddress, "latest"]);
+      const formatted = parseFloat(formatEther(hexBalance || 0n)).toFixed(4);
       setBalance(formatted);
       return formatted;
     } catch (err) {
-      console.warn("Could not fetch wallet balance:", err.message);
-      return "0.0";
+      // Secondary fallback via JsonRpcProvider
+      try {
+        const provider = getReadOnlyProvider();
+        const rawBalance = await provider.getBalance(userAddress);
+        const formatted = parseFloat(formatEther(rawBalance)).toFixed(4);
+        setBalance(formatted);
+        return formatted;
+      } catch (innerErr) {
+        console.warn("Could not fetch wallet balance:", innerErr.message);
+        return "0.0";
+      }
     }
   }, [account]);
 
@@ -130,11 +159,14 @@ export function useWeb3() {
     }
   };
 
-  // Switch or Add Custom Network (VJTI_NET)
+  // Switch or Add Custom Network (Base Sepolia)
+  // Honors lock-in and active RPC URL settings
   const switchNetwork = async () => {
     if (!isMetaMaskInstalled()) return false;
     setError(null);
     const targetChainIdHex = NETWORK_CONFIG.chainIdHex.toLowerCase();
+    const networkRpc = NETWORK_CONFIG.walletRpcUrl;
+
     try {
       await window.ethereum.request({
         method: "wallet_switchEthereumChain",
@@ -143,6 +175,7 @@ export function useWeb3() {
       await verifyNetwork();
       return true;
     } catch (switchErr) {
+      // Error code 4902 indicates chain is not yet added to wallet
       if (switchErr.code === 4902 || switchErr?.data?.originalError?.code === 4902) {
         try {
           await window.ethereum.request({
@@ -151,7 +184,7 @@ export function useWeb3() {
               {
                 chainId: targetChainIdHex,
                 chainName: NETWORK_CONFIG.chainName,
-                rpcUrls: [NETWORK_CONFIG.rpcUrl],
+                rpcUrls: [networkRpc],
                 nativeCurrency: NETWORK_CONFIG.nativeCurrency,
                 blockExplorerUrls: [NETWORK_CONFIG.blockExplorerUrl],
               },
@@ -170,7 +203,7 @@ export function useWeb3() {
     }
   };
 
-  // Check if account has minted on-chain
+  // Check if account has minted on-chain (at least one badge)
   const checkHasMintedOnChain = async (userAddress = account) => {
     if (!userAddress) return false;
     try {
@@ -182,7 +215,31 @@ export function useWeb3() {
     }
   };
 
-  // Mint Badge Transaction
+  // Check if account has minted a specific tier on-chain (Gamified 3-Phase Model)
+  const checkHasMintedTierOnChain = async (tier, userAddress = account) => {
+    if (!userAddress || !tier) return false;
+    try {
+      const [hasMintedTierResult] = await safeEthCall("hasMintedTier", [userAddress, tier]);
+      return Boolean(hasMintedTierResult);
+    } catch (err) {
+      console.warn(`hasMintedTier(${tier}) on-chain query returned error:`, err.message);
+      return false;
+    }
+  };
+
+  // Check if account has collected full set (3/3 badges) on-chain
+  const checkHasFullSetOnChain = async (userAddress = account) => {
+    if (!userAddress) return false;
+    try {
+      const [hasFullSetResult] = await safeEthCall("hasFullSet", [userAddress]);
+      return Boolean(hasFullSetResult);
+    } catch (err) {
+      console.warn("hasFullSet on-chain query returned error:", err.message);
+      return false;
+    }
+  };
+
+  // Mint Badge Transaction for Specific Tier
   const mintBadgeTx = async (tier, onStatusChange) => {
     setError(null);
     try {
@@ -190,17 +247,17 @@ export function useWeb3() {
       onStatusChange("Connecting Wallet...", null);
       const activeAccount = await connect();
 
-      // 2. Ensure Correct Network
-      onStatusChange("Validating Network (VJTI_NET)...", null);
+      // 2. Ensure Correct Network (Base Sepolia)
+      onStatusChange(`Validating Network (${NETWORK_CONFIG.chainName})...`, null);
       const isOk = await verifyNetwork();
       if (!isOk) {
         await switchNetwork();
       }
 
-      // 3. Check if already minted
-      const alreadyMinted = await checkHasMintedOnChain(activeAccount);
-      if (alreadyMinted) {
-        const msg = "Badge already minted for this wallet address!";
+      // 3. Check if already minted this tier
+      const alreadyMintedTier = await checkHasMintedTierOnChain(tier, activeAccount);
+      if (alreadyMintedTier) {
+        const msg = `Tier ${tier} badge already claimed and minted for this wallet!`;
         onStatusChange("Failed", null, msg);
         throw new Error(msg);
       }
@@ -234,9 +291,9 @@ export function useWeb3() {
       if (err.code === "ACTION_REJECTED" || err.code === 4001) {
         friendlyMsg = "Transaction signature was cancelled by user.";
       } else if (err.message?.includes("AlreadyMinted") || err.data?.message?.includes("AlreadyMinted")) {
-        friendlyMsg = "Badge already minted for this wallet!";
+        friendlyMsg = `Tier ${tier} badge already minted for this wallet!`;
       } else if (err.code === "CALL_EXCEPTION" || err.code === -32603) {
-        friendlyMsg = "Transaction reverted on-chain. Likely reason: Badge already claimed.";
+        friendlyMsg = "Transaction reverted on-chain. Likely reason: Badge already claimed or contract unverified.";
       }
       onStatusChange("Failed", null, friendlyMsg);
       throw new Error(friendlyMsg);
@@ -256,9 +313,8 @@ export function useWeb3() {
     });
 
     const handleAccountsChanged = (accounts) => {
-      if (accounts.length > 0) {
+      if (accounts && accounts.length > 0) {
         setAccount(accounts[0]);
-        verifyNetwork();
         fetchBalance(accounts[0]);
       } else {
         setAccount(null);
@@ -271,14 +327,12 @@ export function useWeb3() {
       if (account) fetchBalance(account);
     };
 
-    window.ethereum.on("accountsChanged", handleAccountsChanged);
-    window.ethereum.on("chainChanged", handleChainChanged);
+    window.ethereum.on?.("accountsChanged", handleAccountsChanged);
+    window.ethereum.on?.("chainChanged", handleChainChanged);
 
     return () => {
-      if (window.ethereum.removeListener) {
-        window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
-        window.ethereum.removeListener("chainChanged", handleChainChanged);
-      }
+      window.ethereum.removeListener?.("accountsChanged", handleAccountsChanged);
+      window.ethereum.removeListener?.("chainChanged", handleChainChanged);
     };
   }, [verifyNetwork, fetchBalance, account]);
 
@@ -289,11 +343,15 @@ export function useWeb3() {
     isCorrectNetwork,
     isConnecting,
     error,
+    rpcState,
     shortenAddress,
     connect,
+    verifyNetwork,
     switchNetwork,
     fetchBalance,
     checkHasMintedOnChain,
+    checkHasMintedTierOnChain,
+    checkHasFullSetOnChain,
     mintBadgeTx,
   };
 }

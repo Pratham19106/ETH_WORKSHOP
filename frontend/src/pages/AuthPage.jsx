@@ -18,14 +18,12 @@ import {
 } from "lucide-react";
 import { useWeb3 } from "../hooks/useWeb3";
 import { dbService } from "../lib/supabase";
+import { NETWORK_CONFIG } from "../config/network";
 import BlockchainBackgroundAccents from "../components/BlockchainBackgroundAccents";
 
 export default function AuthPage() {
   const navigate = useNavigate();
   const { account, shortenAddress, connect, isCorrectNetwork, switchNetwork } = useWeb3();
-
-  // Top Section Tab State: 'candidate' | 'admin'
-  const [activeTab, setActiveTab] = useState("candidate");
 
   // Candidate Sub-Mode State: 'login' | 'signup'
   const [candidateMode, setCandidateMode] = useState("login");
@@ -42,11 +40,6 @@ export default function AuthPage() {
   const [loginWalletAddress, setLoginWalletAddress] = useState("");
   const [isLoginSubmitting, setIsLoginSubmitting] = useState(false);
   const [loginError, setLoginError] = useState(null);
-
-  // Admin Form State
-  const [adminPassword, setAdminPassword] = useState("");
-  const [isAdminSubmitting, setIsAdminSubmitting] = useState(false);
-  const [adminError, setAdminError] = useState(null);
 
   // Helper to autofill or connect MetaMask wallet address into login input
   const handleAutofillWallet = async () => {
@@ -150,30 +143,6 @@ export default function AuthPage() {
     }
   };
 
-  // Handle Admin Password Verification
-  const handleAdminLogin = async (e) => {
-    e.preventDefault();
-    setAdminError(null);
-    setIsAdminSubmitting(true);
-
-    try {
-      const settings = await dbService.getEventSettings();
-      const targetPasswordHash = settings.admin_password_hash || "vjti_eth_admin_2026";
-
-      if (adminPassword === targetPasswordHash || adminPassword === "vjti_eth_admin_2026") {
-        sessionStorage.setItem("vjti_eth_admin_auth", "true");
-        navigate("/admin");
-      } else {
-        setAdminError("Access Denied: Invalid Security Passcode.");
-      }
-    } catch (err) {
-      console.error("Admin login error:", err);
-      setAdminError("Failed to verify admin credentials.");
-    } finally {
-      setIsAdminSubmitting(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-cyber-void text-slate-100 cyber-grid-bg flex flex-col justify-between relative overflow-hidden font-mono">
 
@@ -199,7 +168,7 @@ export default function AuthPage() {
                   ETH VJTI
                 </span>
               </div>
-              <p className="text-[0.8rem] text-slate-400">Ethereum Introduction Workshop</p>
+              <p className="text-[0.8rem] text-slate-400">Web3 Genesis</p>
             </div>
           </div>
 
@@ -214,7 +183,7 @@ export default function AuthPage() {
                     }`}
                 >
                   <Network className="w-3 h-3" />
-                  <span>{isCorrectNetwork ? "● VJTI_NET" : "Wrong Net"}</span>
+                  <span>{isCorrectNetwork ? `● ${NETWORK_CONFIG.chainName}` : "Switch Net"}</span>
                 </button>
                 <span className="font-mono text-slate-200">{shortenAddress(account)}</span>
               </div>
@@ -236,50 +205,18 @@ export default function AuthPage() {
 
         {/* Title Banner */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-slate-900/80 border border-neon-cyan/40 text-neon-cyan text-sm font-bold mb-3 shadow-md">
-            <Sparkles className="w-4 h-4" />
-            <span>Decentralized Event Portal</span>
-          </div>
-          <h1 className="font-heading text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-neon-magenta tracking-tight">
-            Blockchain Introduction Workshop [placeholder]
+          <h1 className="font-heading text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-neon-magenta">
+            Web3 Genesis
           </h1>
           <p className="text-slate-300 text-base sm:text-lg mt-3 max-w-2xl mx-auto leading-relaxed">
-            Unlock the future of decentralized networks. Register or log in to access speaker voting and claim your Tiered NFT Badges.
+            Opening the gateways to the knowledge about Blockchain...
           </p>
         </div>
 
         {/* Outer Cyberpunk Glass Card */}
         <div className="cyber-glass rounded-3xl p-6 sm:p-10 shadow-2xl relative border border-cyber-border/60">
 
-          {/* Section Navigation Tabs (Candidate Portal vs Admin Access) */}
-          <div className="flex items-center justify-center p-1 bg-slate-950/80 border border-slate-800 rounded-2xl mb-8 max-w-md mx-auto">
-            <button
-              onClick={() => setActiveTab("candidate")}
-              className={`flex-1 py-3.5 px-5 rounded-xl text-sm sm:text-base font-bold transition-all flex items-center justify-center space-x-2 ${activeTab === "candidate"
-                  ? "bg-gradient-to-r from-neon-cyan/20 to-eth-purple/30 text-neon-cyan border border-neon-cyan/40 shadow-lg"
-                  : "text-slate-400 hover:text-slate-200"
-                }`}
-            >
-              <User className="w-4 h-4" />
-              <span>Candidate Portal</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("admin")}
-              className={`flex-1 py-3.5 px-5 rounded-xl text-sm sm:text-base font-bold transition-all flex items-center justify-center space-x-2 ${activeTab === "admin"
-                  ? "bg-gradient-to-r from-neon-magenta/20 to-purple-600/30 text-neon-magenta border border-neon-magenta/40 shadow-lg"
-                  : "text-slate-400 hover:text-slate-200"
-                }`}
-            >
-              <Lock className="w-4 h-4" />
-              <span>Admin Access</span>
-            </button>
-          </div>
-
-          {/* ================================================================= */}
-          {/* TAB 1: CANDIDATE PORTAL (With Swappable Login / Signup) */}
-          {/* ================================================================= */}
-          {activeTab === "candidate" && (
-            <div className="max-w-xl mx-auto space-y-6">
+          <div className="max-w-xl mx-auto space-y-6">
 
               {/* Candidate Sub-Toggle: Login vs Sign Up */}
               <div className="flex items-center justify-between p-1 bg-slate-900/90 border border-slate-800 rounded-xl max-w-xs mx-auto">
@@ -531,63 +468,6 @@ export default function AuthPage() {
               )}
 
             </div>
-          )}
-
-          {/* ================================================================= */}
-          {/* TAB 2: ADMIN ACCESS */}
-          {/* ================================================================= */}
-          {activeTab === "admin" && (
-            <form onSubmit={handleAdminLogin} className="space-y-6 max-w-md mx-auto py-4">
-              <div className="text-center mb-6">
-                <div className="w-14 h-14 rounded-2xl bg-neon-magenta/10 border border-neon-magenta/40 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-neon-magenta/20">
-                  <Lock className="w-7 h-7 text-neon-magenta" />
-                </div>
-                <h3 className="font-heading text-xl font-bold text-white">Admin Authentication</h3>
-              </div>
-
-              <div>
-                <label className="text-xs uppercase font-bold text-slate-300 block mb-2 flex items-center space-x-2">
-                  <Lock className="w-3.5 h-3.5 text-neon-magenta" />
-                  <span>Security Passcode *</span>
-                </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Enter Passcode"
-                  value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-4 text-center font-mono text-base text-neon-magenta tracking-widest placeholder-slate-600 focus:outline-none focus:border-neon-magenta focus:ring-1 focus:ring-neon-magenta transition-colors"
-                />
-              </div>
-
-              {/* Admin Error Notification */}
-              {adminError && (
-                <div className="p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/30 flex items-start space-x-2 text-xs text-rose-200">
-                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                  <span>{adminError}</span>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={isAdminSubmitting}
-                className="w-full bg-gradient-to-r from-neon-magenta via-purple-600 to-neon-cyan hover:opacity-95 text-white font-bold py-4 px-6 rounded-2xl shadow-xl shadow-neon-magenta/25 flex items-center justify-center space-x-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
-              >
-                {isAdminSubmitting ? (
-                  <>
-                    <Cpu className="w-5 h-5 animate-spin" />
-                    <span>Verifying Credentials...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Unlock Admin Dashboard</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
-            </form>
-          )}
-
         </div>
 
       </main>
