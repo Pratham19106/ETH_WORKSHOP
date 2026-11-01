@@ -233,41 +233,10 @@ export default function AuthPage() {
               </span>
             </h1>
 
-            <p className="text-slate-200 text-base sm:text-lg leading-relaxed max-w-xl">
-              Verify your VJTI registration, link your Web3 wallet, and collect your official Soulbound NFT badges directly on Base Sepolia.
-            </p>
 
             {/* Feature Pills */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1 shadow-sm">
-                <div className="flex items-center space-x-2 text-amber-400 font-bold text-sm">
-                  <Award className="w-4 h-4" />
-                  <span>3-Phase Badges</span>
-                </div>
-                <p className="text-xs text-slate-400 font-sans">
-                  Light Node, Synced Node & Validator NFTs.
-                </p>
-              </div>
 
-              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1 shadow-sm">
-                <div className="flex items-center space-x-2 text-neon-cyan font-bold text-sm">
-                  <Zap className="w-4 h-4" />
-                  <span>Base Sepolia</span>
-                </div>
-                <p className="text-xs text-slate-400 font-sans">
-                  Fast, low-latency Ethereum Layer 2 minting.
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1 shadow-sm">
-                <div className="flex items-center space-x-2 text-eth-purple font-bold text-sm">
-                  <Vote className="w-4 h-4" />
-                  <span>Live Voting</span>
-                </div>
-                <p className="text-xs text-slate-400 font-sans">
-                  On-chain consensus with real-time projector tally.
-                </p>
-              </div>
             </div>
           </div>
 
