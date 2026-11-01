@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   Wallet,
   ShieldCheck,
-  Lock,
   Sparkles,
   ArrowRight,
   Cpu,
@@ -14,7 +13,10 @@ import {
   CheckCircle2,
   AlertCircle,
   LogIn,
-  UserPlus
+  UserPlus,
+  Award,
+  Vote,
+  Zap
 } from "lucide-react";
 import { useWeb3 } from "../hooks/useWeb3";
 import { dbService } from "../lib/supabase";
@@ -102,37 +104,44 @@ export default function AuthPage() {
     e.preventDefault();
     setLoginError(null);
 
-    const trimmedRegNo = loginRegNo.trim();
-    let targetWallet = loginWalletAddress.trim() || account;
+    const inputRegNo = loginRegNo.trim().toUpperCase();
+    const inputWallet = (loginWalletAddress || account || "").trim().toLowerCase();
 
-    if (!trimmedRegNo) {
+    if (!inputRegNo) {
       setLoginError("Please enter your VJTI Registration Number.");
+      return;
+    }
+
+    if (!inputWallet || inputWallet.length !== 42) {
+      setLoginError("Please enter or connect your valid 42-character Ethereum Wallet Address.");
       return;
     }
 
     setIsLoginSubmitting(true);
     try {
-      // Ensure wallet is connected
-      if (!targetWallet) {
-        targetWallet = await connect();
-        setLoginWalletAddress(targetWallet);
-      }
+      // 1. Fetch candidate record by Registration Number from Supabase
+      let candidate = await dbService.getCandidateByRegNo(inputRegNo);
 
-      // 1. Query candidate profile from Supabase by Registration Number or Wallet
-      const candidate = await dbService.getCandidate(targetWallet);
+      // 2. Fallback check by Wallet Address
+      if (!candidate) {
+        candidate = await dbService.getCandidate(inputWallet);
+      }
 
       if (!candidate) {
-        setLoginError(`Attendee not registered for wallet (${shortenAddress(targetWallet)}). Please switch to the Sign Up tab to register!`);
+        setLoginError(`No registered profile found for Registration No. "${inputRegNo}". Please click "Sign Up" above to register.`);
         return;
       }
 
-      // 2. Check if the candidate's reg_no matches
-      if (candidate.reg_no.toUpperCase() !== trimmedRegNo.toUpperCase()) {
-        setLoginError(`Credential Mismatch: Registration Number "${trimmedRegNo.toUpperCase()}" does not match the registered profile for wallet (${shortenAddress(targetWallet)}).`);
+      // 3. Verify Wallet Address Match
+      const storedWallet = (candidate.wallet_address || "").toLowerCase();
+      if (storedWallet !== inputWallet) {
+        setLoginError(
+          `Wallet mismatch: Registration Number ${inputRegNo} is linked to ${shortenAddress(storedWallet)}. You entered ${shortenAddress(inputWallet)}.`
+        );
         return;
       }
 
-      // 3. Match confirmed! Store user session and navigate to Hub
+      // 4. Successful Login
       localStorage.setItem("vjti_eth_user", JSON.stringify(candidate));
       navigate("/hub");
     } catch (err) {
@@ -144,45 +153,49 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-cyber-void text-slate-100 cyber-grid-bg flex flex-col justify-between relative overflow-hidden font-mono">
+    <div className="min-h-screen bg-cyber-void text-slate-100 cyber-grid-bg flex flex-col justify-between relative overflow-hidden font-sans">
 
-      {/* Floating Atmosphere & Floating Vector Blockchain Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-neon-magenta/15 rounded-full blur-[160px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[700px] h-[700px] bg-neon-cyan/15 rounded-full blur-[180px] pointer-events-none" />
+      {/* Floating Atmosphere & Ambient Lighting */}
+      <div className="absolute top-[-10%] left-[-10%] w-[650px] h-[650px] bg-neon-magenta/15 rounded-full blur-[160px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[750px] h-[750px] bg-neon-cyan/15 rounded-full blur-[180px] pointer-events-none" />
       <div className="absolute top-[35%] right-[20%] w-[450px] h-[450px] bg-eth-purple/20 rounded-full blur-[150px] pointer-events-none" />
 
       <BlockchainBackgroundAccents />
 
       {/* Top Header */}
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-cyber-void/80 border-b border-cyber-border/40">
-        <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 sm:h-[84px] flex items-center justify-between">
-          <div className="flex items-center space-x-2.5 sm:space-x-3.5">
+      <header className="sticky top-0 z-40 backdrop-blur-md bg-cyber-void/85 border-b border-cyber-border/40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-18 sm:h-20 flex items-center justify-between">
+          <div className="flex items-center space-x-3 sm:space-x-4">
             <img
               src="/ETH_VJTI.jpg"
               alt="ETH VJTI Logo"
-              className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-cover border border-neon-cyan/40 shadow-md shadow-neon-cyan/20 ring-2 ring-neon-cyan/30 shrink-0"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-cover border-2 border-neon-cyan/50 shadow-md shadow-neon-cyan/20 ring-2 ring-neon-cyan/30 shrink-0"
             />
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-heading font-extrabold text-lg sm:text-[1.35rem] tracking-tight text-white glow-cyan">
+                <span className="font-heading font-black text-xl sm:text-2xl tracking-tight text-white glow-cyan">
                   ETH VJTI
                 </span>
+                <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-cyan-950/80 text-neon-cyan border border-neon-cyan/40 font-bold uppercase tracking-wider">
+                  Genesis
+                </span>
               </div>
-              <p className="text-[11px] sm:text-[0.8rem] text-slate-400">Web3 Genesis</p>
+              <p className="text-xs sm:text-sm text-slate-300 font-medium">Workshop Portal</p>
             </div>
           </div>
 
           <div className="flex items-center space-x-2 sm:space-x-3">
             {account ? (
-              <div className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-900/90 border border-cyber-border/60 rounded-full p-1 sm:p-1.5 pl-2.5 sm:pl-4 text-[11px] sm:text-xs">
+              <div className="flex items-center space-x-2 bg-slate-900/90 border border-slate-700 rounded-full p-1.5 pl-3 sm:pl-4 text-xs sm:text-sm shadow-md">
                 <button
                   onClick={switchNetwork}
-                  className={`flex items-center space-x-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-medium ${isCorrectNetwork
-                      ? "bg-neon-green/10 text-neon-green border border-neon-green/30"
-                      : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
-                    }`}
+                  className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full font-bold transition-all ${
+                    isCorrectNetwork
+                      ? "bg-neon-green/15 text-neon-green border border-neon-green/40"
+                      : "bg-amber-500/15 text-amber-300 border border-amber-500/40"
+                  }`}
                 >
-                  <Network className="w-3 h-3 shrink-0" />
+                  <Network className="w-3.5 h-3.5 shrink-0" />
                   <span className="hidden xs:inline sm:inline">{isCorrectNetwork ? `● ${NETWORK_CONFIG.chainName}` : "Switch Net"}</span>
                   <span className="xs:hidden sm:hidden">{isCorrectNetwork ? "● Base" : "Switch"}</span>
                 </button>
@@ -191,9 +204,9 @@ export default function AuthPage() {
             ) : (
               <button
                 onClick={connect}
-                className="flex items-center space-x-1.5 sm:space-x-2 bg-gradient-to-r from-neon-cyan via-indigo-600 to-neon-magenta hover:opacity-95 text-slate-950 font-bold px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs shadow-lg shadow-neon-cyan/20 transition-all hover:scale-105 active:scale-95"
+                className="flex items-center space-x-2 bg-gradient-to-r from-neon-cyan via-teal-400 to-indigo-600 hover:opacity-95 text-slate-950 font-black px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm shadow-lg shadow-neon-cyan/25 transition-all hover:scale-105 active:scale-95"
               >
-                <Wallet className="w-3.5 h-3.5 shrink-0" />
+                <Wallet className="w-4 h-4 shrink-0" />
                 <span>Connect Wallet</span>
               </button>
             )}
@@ -202,25 +215,68 @@ export default function AuthPage() {
       </header>
 
       {/* Main Portal Container */}
-      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-12 w-full flex-1 flex flex-col justify-center relative z-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-8 py-8 sm:py-14 w-full flex-1 flex flex-col justify-center relative z-10">
 
-        {/* Title Banner */}
-        <div className="text-center mb-6 sm:mb-10">
-          <h1 className="font-heading text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-neon-magenta">
-            Web3 Genesis
-          </h1>
-          <p className="text-slate-300 text-sm sm:text-lg mt-2 sm:mt-3 max-w-2xl mx-auto leading-relaxed px-2">
-            Opening the gateways to the knowledge about Blockchain...
-          </p>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center w-full">
 
-        {/* Outer Cyberpunk Glass Card */}
-        <div className="cyber-glass rounded-2xl sm:rounded-3xl p-4 sm:p-10 shadow-2xl relative border border-cyber-border/60">
+          {/* Left Column: Workshop Hero & Highlights (Eliminates empty space on desktop, rich context) */}
+          <div className="lg:col-span-6 space-y-6 text-left">
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 text-xs sm:text-sm font-bold shadow-sm">
+              <Sparkles className="w-4 h-4 text-neon-cyan animate-pulse" />
+              <span>ETH VJTI • Web3 Genesis Workshop</span>
+            </div>
 
-          <div className="max-w-xl mx-auto space-y-5 sm:space-y-6">
+            <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.1]">
+              Enter the <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan via-teal-300 to-neon-magenta">
+                Genesis Portal.
+              </span>
+            </h1>
 
-              {/* Candidate Sub-Toggle: Login vs Sign Up */}
-              <div className="flex items-center justify-between p-1 bg-slate-900/90 border border-slate-800 rounded-xl max-w-xs mx-auto">
+            <p className="text-slate-200 text-base sm:text-lg leading-relaxed max-w-xl">
+              Verify your VJTI registration, link your Web3 wallet, and collect your official Soulbound NFT badges directly on Base Sepolia.
+            </p>
+
+            {/* Feature Pills */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1 shadow-sm">
+                <div className="flex items-center space-x-2 text-amber-400 font-bold text-sm">
+                  <Award className="w-4 h-4" />
+                  <span>3-Phase Badges</span>
+                </div>
+                <p className="text-xs text-slate-400 font-sans">
+                  Light Node, Synced Node & Validator NFTs.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1 shadow-sm">
+                <div className="flex items-center space-x-2 text-neon-cyan font-bold text-sm">
+                  <Zap className="w-4 h-4" />
+                  <span>Base Sepolia</span>
+                </div>
+                <p className="text-xs text-slate-400 font-sans">
+                  Fast, low-latency Ethereum Layer 2 minting.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1 shadow-sm">
+                <div className="flex items-center space-x-2 text-eth-purple font-bold text-sm">
+                  <Vote className="w-4 h-4" />
+                  <span>Live Voting</span>
+                </div>
+                <p className="text-xs text-slate-400 font-sans">
+                  On-chain consensus with real-time projector tally.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: High-Contrast, Spacious Candidate Card */}
+          <div className="lg:col-span-6 w-full max-w-xl mx-auto">
+            <div className="cyber-glass rounded-3xl p-6 sm:p-9 shadow-2xl relative border-2 border-cyber-border/70 space-y-6">
+
+              {/* Sub-Toggle: Login vs Sign Up */}
+              <div className="flex items-center justify-between p-1.5 bg-slate-950/95 border-2 border-slate-800 rounded-2xl shadow-inner">
                 <button
                   type="button"
                   onClick={() => {
@@ -228,13 +284,14 @@ export default function AuthPage() {
                     setCandidateError(null);
                     setLoginError(null);
                   }}
-                  className={`flex-1 py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center space-x-1.5 ${candidateMode === "login"
-                      ? "bg-neon-cyan text-slate-950 shadow-md font-black"
-                      : "text-slate-400 hover:text-slate-200"
-                    }`}
+                  className={`flex-1 py-3 px-4 rounded-xl text-sm sm:text-base font-extrabold transition-all flex items-center justify-center space-x-2 ${
+                    candidateMode === "login"
+                      ? "bg-neon-cyan text-slate-950 shadow-lg shadow-neon-cyan/30 font-black"
+                      : "text-slate-300 hover:text-white"
+                  }`}
                 >
                   <LogIn className="w-4 h-4 shrink-0" />
-                  <span>Log In</span>
+                  <span>Candidate Log In</span>
                 </button>
                 <button
                   type="button"
@@ -243,32 +300,36 @@ export default function AuthPage() {
                     setCandidateError(null);
                     setLoginError(null);
                   }}
-                  className={`flex-1 py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center space-x-1.5 ${candidateMode === "signup"
-                      ? "bg-neon-magenta text-white shadow-md font-black"
-                      : "text-slate-400 hover:text-slate-200"
-                    }`}
+                  className={`flex-1 py-3 px-4 rounded-xl text-sm sm:text-base font-extrabold transition-all flex items-center justify-center space-x-2 ${
+                    candidateMode === "signup"
+                      ? "bg-neon-magenta text-white shadow-lg shadow-neon-magenta/30 font-black"
+                      : "text-slate-300 hover:text-white"
+                  }`}
                 >
                   <UserPlus className="w-4 h-4 shrink-0" />
-                  <span>Sign Up</span>
+                  <span>New Sign Up</span>
                 </button>
               </div>
 
               {/* ------------------------------------------------------------- */}
-              {/* MODE 1: CANDIDATE LOG IN (Reg No + MetaMask Wallet) */}
+              {/* MODE 1: CANDIDATE LOG IN */}
               {/* ------------------------------------------------------------- */}
               {candidateMode === "login" && (
-                <form onSubmit={handleCandidateLogin} className="space-y-5 py-2">
-                  <div className="border-b border-slate-800/80 pb-3 text-center">
-                    <h3 className="font-heading text-xl font-bold text-white flex items-center justify-center space-x-2">
+                <form onSubmit={handleCandidateLogin} className="space-y-5">
+                  <div className="border-b border-slate-800 pb-3 text-left">
+                    <h3 className="font-heading text-lg sm:text-xl font-bold text-white flex items-center space-x-2">
                       <LogIn className="w-5 h-5 text-neon-cyan" />
-                      <span>Candidate Portal Log In</span>
+                      <span>Log In to Your Candidate Hub</span>
                     </h3>
+                    <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                      Enter your VJTI registration number and your connected wallet.
+                    </p>
                   </div>
 
                   {/* 1. Registration Number Field */}
-                  <div>
-                    <label className="text-xs uppercase font-bold text-slate-300 block mb-2 flex items-center space-x-2">
-                      <Hash className="w-3.5 h-3.5 text-neon-magenta" />
+                  <div className="text-left">
+                    <label className="text-sm font-bold text-white block mb-2 flex items-center space-x-2">
+                      <Hash className="w-4 h-4 text-neon-magenta shrink-0" />
                       <span>VJTI Registration Number *</span>
                     </label>
                     <input
@@ -277,47 +338,48 @@ export default function AuthPage() {
                       placeholder="e.g. 241080001"
                       value={loginRegNo}
                       onChange={(e) => setLoginRegNo(e.target.value)}
-                      className="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-3 sm:p-3.5 text-base sm:text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-neon-magenta focus:ring-1 focus:ring-neon-magenta transition-colors"
+                      className="w-full bg-slate-950/90 border-2 border-slate-700 focus:border-neon-magenta focus:ring-2 focus:ring-neon-magenta/25 rounded-xl p-3.5 sm:p-4 text-base sm:text-lg text-white font-mono font-bold placeholder:text-slate-400 transition-all shadow-inner"
                     />
                   </div>
 
                   {/* 2. Connected MetaMask Wallet Display / Input */}
-                  <div>
-                    <label className="text-xs uppercase font-bold text-slate-300 block mb-2 flex items-center justify-between">
+                  <div className="text-left">
+                    <label className="text-sm font-bold text-white block mb-2 flex items-center justify-between">
                       <span className="flex items-center space-x-2">
-                        <Wallet className="w-3.5 h-3.5 text-neon-cyan shrink-0" />
+                        <Wallet className="w-4 h-4 text-neon-cyan shrink-0" />
                         <span>Registered MetaMask Wallet *</span>
                       </span>
                       <button
                         type="button"
                         onClick={handleAutofillWallet}
-                        className="text-[10px] sm:text-xs text-neon-cyan hover:underline font-bold"
+                        className="px-2.5 py-1 rounded-lg bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-900/60 text-xs font-bold transition-colors flex items-center space-x-1"
                       >
-                        {account ? `Autofill (${shortenAddress(account)})` : "Connect Wallet"}
+                        <Wallet className="w-3 h-3" />
+                        <span>{account ? `Autofill ${shortenAddress(account)}` : "Connect Wallet"}</span>
                       </button>
                     </label>
 
                     <input
                       type="text"
                       required
-                      placeholder="e.g. 0xDF3790...0a895"
+                      placeholder="e.g. 0x2b30...d365"
                       value={loginWalletAddress || account || ""}
                       onChange={(e) => setLoginWalletAddress(e.target.value)}
-                      className="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-3 sm:p-3.5 text-base sm:text-sm font-mono text-slate-100 placeholder-slate-600 focus:outline-none focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan transition-colors"
+                      className="w-full bg-slate-950/90 border-2 border-slate-700 focus:border-neon-cyan focus:ring-2 focus:ring-neon-cyan/25 rounded-xl p-3.5 sm:p-4 text-base sm:text-lg font-mono font-bold text-white placeholder:text-slate-400 transition-all shadow-inner"
                     />
                   </div>
 
                   {/* Login Error Notification */}
                   {loginError && (
-                    <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/30 space-y-2 text-xs text-rose-200">
+                    <div className="p-4 rounded-xl bg-rose-950/60 border border-rose-500/50 space-y-2 text-xs sm:text-sm text-rose-200 text-left">
                       <div className="flex items-start space-x-2">
-                        <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                        <span>{loginError}</span>
+                        <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                        <span className="font-medium">{loginError}</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => setCandidateMode("signup")}
-                        className="text-left text-neon-cyan font-bold hover:underline pl-6 text-[11px] block"
+                        className="text-left text-neon-cyan font-bold hover:underline pl-7 text-xs sm:text-sm block"
                       >
                         Click here to switch to Sign Up & Register your profile →
                       </button>
@@ -328,17 +390,17 @@ export default function AuthPage() {
                   <button
                     type="submit"
                     disabled={isLoginSubmitting}
-                    className="w-full bg-gradient-to-r from-neon-cyan via-teal-500 to-indigo-600 hover:opacity-95 text-slate-950 font-black py-4 px-6 rounded-2xl shadow-xl shadow-neon-cyan/20 flex items-center justify-center space-x-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+                    className="w-full bg-gradient-to-r from-neon-cyan via-teal-400 to-indigo-600 hover:opacity-95 text-slate-950 font-black py-4 px-6 rounded-xl text-base sm:text-lg shadow-xl shadow-neon-cyan/25 flex items-center justify-center space-x-2.5 transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50"
                   >
                     {isLoginSubmitting ? (
                       <>
                         <Cpu className="w-5 h-5 animate-spin" />
-                        <span>Verifying Registration & Wallet Match...</span>
+                        <span>Verifying Registration & Wallet...</span>
                       </>
                     ) : (
                       <>
                         <LogIn className="w-5 h-5" />
-                        <span>Log In & Verify Profile</span>
+                        <span>Log In & Enter Hub</span>
                         <ArrowRight className="w-5 h-5" />
                       </>
                     )}
@@ -347,24 +409,24 @@ export default function AuthPage() {
               )}
 
               {/* ------------------------------------------------------------- */}
-              {/* MODE 2: CANDIDATE SIGN UP (Registration Form) */}
+              {/* MODE 2: CANDIDATE SIGN UP */}
               {/* ------------------------------------------------------------- */}
               {candidateMode === "signup" && (
-                <form onSubmit={handleCandidateSignup} className="space-y-6">
-                  <div className="border-b border-slate-800/80 pb-3">
-                    <h3 className="font-heading text-xl font-bold text-white flex items-center space-x-2">
+                <form onSubmit={handleCandidateSignup} className="space-y-5">
+                  <div className="border-b border-slate-800 pb-3 text-left">
+                    <h3 className="font-heading text-lg sm:text-xl font-bold text-white flex items-center space-x-2">
                       <UserPlus className="w-5 h-5 text-neon-magenta" />
-                      <span>Candidate Registration</span>
+                      <span>New Candidate Registration</span>
                     </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      Enter your VJTI academic details and link your Ethereum Web3 wallet to register.
+                    <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                      Enter your VJTI academic details to link your Ethereum Web3 wallet.
                     </p>
                   </div>
 
                   {/* Full Name */}
-                  <div>
-                    <label className="text-xs uppercase font-bold text-slate-300 block mb-2 flex items-center space-x-2">
-                      <User className="w-3.5 h-3.5 text-neon-cyan" />
+                  <div className="text-left">
+                    <label className="text-sm font-bold text-white block mb-2 flex items-center space-x-2">
+                      <User className="w-4 h-4 text-neon-cyan shrink-0" />
                       <span>Full Candidate Name *</span>
                     </label>
                     <input
@@ -373,14 +435,14 @@ export default function AuthPage() {
                       placeholder="e.g. Siddharth Sharma"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-3 sm:p-3.5 text-base sm:text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan transition-colors"
+                      className="w-full bg-slate-950/90 border-2 border-slate-700 focus:border-neon-cyan focus:ring-2 focus:ring-neon-cyan/25 rounded-xl p-3.5 sm:p-4 text-base sm:text-lg text-white font-medium placeholder:text-slate-400 transition-all shadow-inner"
                     />
                   </div>
 
                   {/* Registration Number */}
-                  <div>
-                    <label className="text-xs uppercase font-bold text-slate-300 block mb-2 flex items-center space-x-2">
-                      <Hash className="w-3.5 h-3.5 text-neon-magenta" />
+                  <div className="text-left">
+                    <label className="text-sm font-bold text-white block mb-2 flex items-center space-x-2">
+                      <Hash className="w-4 h-4 text-neon-magenta shrink-0" />
                       <span>VJTI Registration Number *</span>
                     </label>
                     <input
@@ -389,49 +451,49 @@ export default function AuthPage() {
                       placeholder="e.g. 241080001"
                       value={regNo}
                       onChange={(e) => setRegNo(e.target.value)}
-                      className="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-3 sm:p-3.5 text-base sm:text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-neon-magenta focus:ring-1 focus:ring-neon-magenta transition-colors"
+                      className="w-full bg-slate-950/90 border-2 border-slate-700 focus:border-neon-magenta focus:ring-2 focus:ring-neon-magenta/25 rounded-xl p-3.5 sm:p-4 text-base sm:text-lg text-white font-mono font-bold placeholder:text-slate-400 transition-all shadow-inner"
                     />
                   </div>
 
                   {/* Branch Selection */}
-                  <div>
-                    <label className="text-xs uppercase font-bold text-slate-300 block mb-2 flex items-center space-x-2">
-                      <BookOpen className="w-3.5 h-3.5 text-eth-purple" />
+                  <div className="text-left">
+                    <label className="text-sm font-bold text-white block mb-2 flex items-center space-x-2">
+                      <BookOpen className="w-4 h-4 text-eth-purple shrink-0" />
                       <span>Branch / Department *</span>
                     </label>
                     <select
                       value={branch}
                       onChange={(e) => setBranch(e.target.value)}
-                      className="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-3 sm:p-3.5 text-base sm:text-sm text-slate-100 focus:outline-none focus:border-eth-purple focus:ring-1 focus:ring-eth-purple transition-colors"
+                      className="w-full bg-slate-950/90 border-2 border-slate-700 focus:border-eth-purple focus:ring-2 focus:ring-eth-purple/25 rounded-xl p-3.5 sm:p-4 text-base sm:text-lg text-white font-medium transition-all shadow-inner"
                     >
-                      <option value="Computer Engineering">Computer Engineering</option>
-                      <option value="Information Technology">Information Technology</option>
-                      <option value="Electronics & Telecom">Electronics & Telecom</option>
-                      <option value="Electrical Engineering">Electrical Engineering</option>
-                      <option value="Mechanical Engineering">Mechanical Engineering</option>
-                      <option value="Civil Engineering">Civil Engineering</option>
-                      <option value="Production Engineering">Production Engineering</option>
-                      <option value="Textile Engineering">Textile Engineering</option>
+                      <option value="Computer Engineering" className="bg-slate-950 text-white">Computer Engineering</option>
+                      <option value="Information Technology" className="bg-slate-950 text-white">Information Technology</option>
+                      <option value="Electronics & Telecom" className="bg-slate-950 text-white">Electronics & Telecom</option>
+                      <option value="Electrical Engineering" className="bg-slate-950 text-white">Electrical Engineering</option>
+                      <option value="Mechanical Engineering" className="bg-slate-950 text-white">Mechanical Engineering</option>
+                      <option value="Civil Engineering" className="bg-slate-950 text-white">Civil Engineering</option>
+                      <option value="Production Engineering" className="bg-slate-950 text-white">Production Engineering</option>
+                      <option value="Textile Engineering" className="bg-slate-950 text-white">Textile Engineering</option>
                     </select>
                   </div>
 
-                  {/* Connected Wallet Info Box */}
-                  <div className="p-4 rounded-2xl bg-slate-950/90 border border-slate-800/80 space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400 flex items-center space-x-1.5">
-                        <Wallet className="w-3.5 h-3.5 text-neon-cyan" />
+                  {/* Linked Wallet Info Box */}
+                  <div className="p-4 rounded-xl bg-slate-950/95 border-2 border-slate-800 space-y-2 text-left">
+                    <div className="flex items-center justify-between text-xs sm:text-sm">
+                      <span className="text-slate-300 font-bold flex items-center space-x-1.5">
+                        <Wallet className="w-4 h-4 text-neon-cyan shrink-0" />
                         <span>Linked Ethereum Wallet:</span>
                       </span>
                       {account ? (
                         <span className="font-mono text-neon-green font-bold flex items-center space-x-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <CheckCircle2 className="w-4 h-4" />
                           <span>{shortenAddress(account)}</span>
                         </span>
                       ) : (
                         <button
                           type="button"
                           onClick={connect}
-                          className="text-neon-cyan hover:underline font-bold"
+                          className="px-3 py-1 rounded-lg bg-neon-cyan/20 border border-neon-cyan/40 text-neon-cyan hover:bg-neon-cyan/30 font-bold transition-all"
                         >
                           Connect MetaMask
                         </button>
@@ -441,9 +503,9 @@ export default function AuthPage() {
 
                   {/* Candidate Error Notification */}
                   {candidateError && (
-                    <div className="p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/30 flex items-start space-x-2 text-xs text-rose-200">
-                      <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                      <span>{candidateError}</span>
+                    <div className="p-4 rounded-xl bg-rose-950/60 border border-rose-500/50 flex items-start space-x-2 text-xs sm:text-sm text-rose-200 text-left">
+                      <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                      <span className="font-medium">{candidateError}</span>
                     </div>
                   )}
 
@@ -451,12 +513,12 @@ export default function AuthPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-gradient-to-r from-neon-magenta via-purple-600 to-neon-cyan hover:opacity-95 text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-neon-magenta/20 flex items-center justify-center space-x-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+                    className="w-full bg-gradient-to-r from-neon-magenta via-purple-600 to-neon-cyan hover:opacity-95 text-white font-black py-4 px-6 rounded-xl text-base sm:text-lg shadow-xl shadow-neon-magenta/25 flex items-center justify-center space-x-2.5 transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50"
                   >
                     {isSubmitting ? (
                       <>
                         <Cpu className="w-5 h-5 animate-spin" />
-                        <span>Registering Candidate...</span>
+                        <span>Registering Candidate Profile...</span>
                       </>
                     ) : (
                       <>
@@ -469,14 +531,16 @@ export default function AuthPage() {
               )}
 
             </div>
+          </div>
+
         </div>
 
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-cyber-border/40 bg-cyber-void/90 py-6 relative z-10">
-        <div className="max-w-6xl mx-auto px-4 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <p>© 2026 ETH VJTI.</p>
+      <footer className="border-t border-cyber-border/40 bg-cyber-void/90 py-5 sm:py-6 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 text-center text-xs sm:text-sm text-slate-400 flex flex-col sm:flex-row items-center justify-center gap-2">
+          <p className="font-medium">© 2026 ETH VJTI • Web3 Genesis Workshop</p>
         </div>
       </footer>
 
