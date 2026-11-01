@@ -216,24 +216,24 @@ export default function AttendeeHub() {
 
       {/* Header Bar */}
       <header className="sticky top-0 z-40 backdrop-blur-md bg-cyber-void/80 border-b border-cyber-border/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-[84px] flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 sm:h-[84px] flex items-center justify-between">
 
-          <div className="flex items-center space-x-3.5">
+          <div className="flex items-center space-x-2.5 sm:space-x-3.5">
             <img
               src="/ETH_VJTI.jpg"
               alt="ETH VJTI Logo"
-              className="w-11 h-11 rounded-xl object-cover border border-neon-cyan/40 shadow-md shadow-neon-cyan/20 ring-2 ring-neon-cyan/30"
+              className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-cover border border-neon-cyan/40 shadow-md shadow-neon-cyan/20 ring-2 ring-neon-cyan/30 shrink-0"
             />
             <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-heading font-extrabold text-[1.35rem] tracking-tight text-white glow-cyan">
+              <div className="flex items-center space-x-1.5 sm:space-x-2">
+                <span className="font-heading font-extrabold text-lg sm:text-[1.35rem] tracking-tight text-white glow-cyan">
                   Attendee Hub
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/30 font-bold">
+                <span className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/30 font-bold">
                   Base Sepolia
                 </span>
               </div>
-              <p className="text-[0.8rem] text-slate-400">
+              <p className="text-[11px] sm:text-[0.8rem] text-slate-400 max-w-[130px] sm:max-w-none truncate">
                 {currentCandidate ? `${currentCandidate.name} (${currentCandidate.reg_no})` : "Candidate Session Active"}
               </p>
             </div>
@@ -255,30 +255,31 @@ export default function AttendeeHub() {
           </div>
 
           {/* Connected Account & Actions */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             {account ? (
-              <div className="flex items-center space-x-2 bg-slate-900/90 border border-cyber-border/60 rounded-full p-1.5 pl-4 text-xs">
+              <div className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-900/90 border border-cyber-border/60 rounded-full p-1 sm:p-1.5 pl-2.5 sm:pl-4 text-[11px] sm:text-xs">
                 <button
                   onClick={switchNetwork}
-                  className={`flex items-center space-x-1 px-2.5 py-1 rounded-full font-medium ${isCorrectNetwork
+                  className={`flex items-center space-x-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-medium ${isCorrectNetwork
                     ? "bg-neon-green/10 text-neon-green border border-neon-green/30"
                     : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
                     }`}
                 >
-                  <Network className="w-3 h-3" />
-                  <span>{isCorrectNetwork ? `● ${NETWORK_CONFIG.chainName}` : "Switch Net"}</span>
+                  <Network className="w-3 h-3 shrink-0" />
+                  <span className="hidden xs:inline sm:inline">{isCorrectNetwork ? `● ${NETWORK_CONFIG.chainName}` : "Switch Net"}</span>
+                  <span className="xs:hidden sm:hidden">{isCorrectNetwork ? "● Base" : "Switch"}</span>
                 </button>
                 <span className="font-mono text-slate-300 font-bold">{shortenAddress(account)}</span>
-                <span className="bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-full text-slate-400 font-mono text-[11px]">
+                <span className="hidden sm:inline bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-full text-slate-400 font-mono text-[11px]">
                   {balance} ETH
                 </span>
               </div>
             ) : (
               <button
                 onClick={connect}
-                className="flex items-center space-x-2 bg-gradient-to-r from-neon-cyan to-eth-purple text-slate-950 font-bold px-4 py-2 rounded-full text-xs shadow-lg shadow-neon-cyan/20 transition-all hover:scale-105"
+                className="flex items-center space-x-1.5 sm:space-x-2 bg-gradient-to-r from-neon-cyan to-eth-purple text-slate-950 font-bold px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs shadow-lg shadow-neon-cyan/20 transition-all hover:scale-105 active:scale-95"
               >
-                <Wallet className="w-3.5 h-3.5" />
+                <Wallet className="w-3.5 h-3.5 shrink-0" />
                 <span>Connect Wallet</span>
               </button>
             )}
@@ -286,23 +287,23 @@ export default function AttendeeHub() {
             <button
               onClick={handleLogout}
               title="Logout Candidate"
-              className="p-2.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 transition-colors"
+              className="p-2 sm:p-2.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 transition-colors"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
             </button>
           </div>
         </div>
       </header>
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 pb-10 w-full flex-1 space-y-8 relative z-10">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 pt-24 sm:pt-20 pb-10 w-full flex-1 space-y-6 sm:space-y-8 relative z-10">
 
         {/* Absolute Top-Right Badges Score Counter (Always on top) */}
-        <div className="absolute top-4 right-4 sm:right-6 z-30 flex items-center space-x-3 bg-slate-950/90 border border-slate-800 px-4 py-2.5 rounded-2xl shadow-xl backdrop-blur-md">
-          <Trophy className="w-5 h-5 text-amber-400 shrink-0" />
+        <div className="absolute top-3 right-3 sm:top-4 sm:right-6 z-30 flex items-center space-x-2 sm:space-x-3 bg-slate-950/90 border border-slate-800 px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl shadow-xl backdrop-blur-md">
+          <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 shrink-0" />
           <div>
-            <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Node Badges Collected</div>
-            <div className="text-base font-black text-white font-mono flex items-center space-x-1.5">
+            <div className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-500 tracking-wider">Node Badges Collected</div>
+            <div className="text-sm sm:text-base font-black text-white font-mono flex items-center space-x-1.5">
               <span className={claimedCount > 0 ? "text-neon-cyan" : "text-slate-400"}>{claimedCount}</span>
               <span className="text-slate-600">/</span>
               <span className="text-slate-300">3 Badges</span>
@@ -311,13 +312,13 @@ export default function AttendeeHub() {
         </div>
 
         {/* Mobile Navigation Pill */}
-        <div className="flex md:hidden items-center justify-center space-x-2 bg-slate-950/80 p-1 rounded-2xl border border-slate-800 max-w-xs mx-auto">
-          <div className="flex-1 text-center py-2 rounded-xl text-xs font-black bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40">
+        <div className="flex md:hidden items-center justify-center space-x-2 bg-slate-950/90 p-1 rounded-xl border border-slate-800 max-w-xs mx-auto shadow-md mb-2">
+          <div className="flex-1 text-center py-2 rounded-lg text-xs font-black bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40">
             NFT Badges
           </div>
           <Link
             to="/vote"
-            className="flex-1 text-center py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white"
+            className="flex-1 text-center py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white"
           >
             Voting
           </Link>
@@ -325,11 +326,11 @@ export default function AttendeeHub() {
 
         {/* Absolute Winner Banner (Unlocked when 3/3 Badges Collected) */}
         {isFullSetWinner && (
-          <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-500/20 via-purple-600/30 to-neon-magenta/20 border-2 border-amber-400/60 shadow-2xl shadow-amber-500/20 text-center space-y-2 relative overflow-hidden animate-pulse">
-            <div className="flex items-center justify-center space-x-2 text-amber-300 font-black text-xl tracking-tight">
-              <Crown className="w-6 h-6 text-amber-400" />
-              <span>🏆 ABSOLUTE WINNER: FULL NODE SET COLLECTED (3/3)!</span>
-              <Crown className="w-6 h-6 text-amber-400" />
+          <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-amber-500/20 via-purple-600/30 to-neon-magenta/20 border-2 border-amber-400/60 shadow-2xl shadow-amber-500/20 text-center space-y-2 relative overflow-hidden animate-pulse">
+            <div className="flex items-center justify-center space-x-2 text-amber-300 font-black text-base sm:text-xl tracking-tight">
+              <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400 shrink-0" />
+              <span>🏆 ABSOLUTE WINNER: FULL NODE SET (3/3)!</span>
+              <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400 shrink-0" />
             </div>
             <p className="text-xs text-amber-200/90 max-w-2xl mx-auto font-mono">
               Congratulations {currentCandidate?.name || "Candidate"}! You hold the Light Node, Synced Node, and Validator badges. You have achieved maximum decentralized mastery in the ETH VJTI Workshop!
@@ -339,37 +340,37 @@ export default function AttendeeHub() {
 
         {/* 2. Gamified 3-Phase Node Badge Quest Grid */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-4">
             <div className="flex items-center space-x-2">
-              <Sparkles className="w-5 h-5 text-neon-cyan" />
-              <h3 className="font-heading text-xl font-bold text-white">Workshop 3-Phase Node Quests</h3>
+              <Sparkles className="w-5 h-5 text-neon-cyan shrink-0" />
+              <h3 className="font-heading text-lg sm:text-xl font-bold text-white">Workshop 3-Phase Node Quests</h3>
             </div>
-            <span className="text-xs text-slate-400 font-mono">
-              Show Your entusiastic participation and unlock exclusive NFT badges for each phase of the workshop!
+            <span className="text-xs text-slate-400 font-mono leading-relaxed">
+              Show your enthusiastic participation and unlock exclusive NFT badges for each phase of the workshop!
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
 
             {/* ============================================================= */}
             {/* TIER 1: LIGHT NODE (PHASE 1 - ALL ATTENDEES, WAVE CONTROLLED) */}
             {/* ============================================================= */}
-            <div className={`cyber-glass rounded-3xl p-6 shadow-2xl relative border flex flex-col justify-between transition-all ${isTier1Claimed ? "border-amber-500/50 bg-amber-950/10" : "border-cyber-border/60 hover:border-amber-500/30"
+            <div className={`cyber-glass rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl relative border flex flex-col justify-between transition-all ${isTier1Claimed ? "border-amber-500/50 bg-amber-950/10" : "border-cyber-border/60 hover:border-amber-500/30"
               }`}>
               <div className="space-y-4">
                 {/* Artwork */}
-                <div className="relative group rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 aspect-square flex items-center justify-center p-4 shadow-xl">
+                <div className="relative group rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 aspect-square flex items-center justify-center p-3 sm:p-4 shadow-xl max-h-[300px] sm:max-h-none mx-auto w-full">
                   <div className="absolute inset-0 bg-gradient-to-br from-amber-700/20 to-amber-900/30 pointer-events-none" />
                   <img
                     src={BADGE_TIERS[1].image}
                     alt={BADGE_TIERS[1].name}
                     className="w-full h-full object-contain rounded-xl transform group-hover:scale-105 transition-transform duration-500 drop-shadow-[0_10px_25px_rgba(245,158,11,0.25)]"
                   />
-                  <div className="absolute top-3 left-3 bg-slate-950/90 backdrop-blur-md border border-slate-700 text-amber-400 px-3 py-1 rounded-full text-[11px] font-bold shadow-md">
+                  <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 bg-slate-950/90 backdrop-blur-md border border-slate-700 text-amber-400 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-bold shadow-md">
                     Phase 1: {BADGE_TIERS[1].name}
                   </div>
                   {isTier1Claimed && (
-                    <div className="absolute top-3 right-3 bg-neon-green/90 text-slate-950 px-2.5 py-0.5 rounded-full text-[10px] font-black flex items-center space-x-1 shadow-md">
+                    <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 bg-neon-green/90 text-slate-950 px-2 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black flex items-center space-x-1 shadow-md">
                       <CheckCircle2 className="w-3 h-3" />
                       <span>CLAIMED</span>
                     </div>
@@ -450,22 +451,22 @@ export default function AttendeeHub() {
             {/* ============================================================= */}
             {/* TIER 2: SYNCED NODE (PHASE 2 - ACTIVE BUILDERS, NO WAVES)     */}
             {/* ============================================================= */}
-            <div className={`cyber-glass rounded-3xl p-6 shadow-2xl relative border flex flex-col justify-between transition-all ${isTier2Claimed ? "border-cyan-500/50 bg-cyan-950/10" : "border-cyber-border/60 hover:border-cyan-500/30"
+            <div className={`cyber-glass rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl relative border flex flex-col justify-between transition-all ${isTier2Claimed ? "border-cyan-500/50 bg-cyan-950/10" : "border-cyber-border/60 hover:border-cyan-500/30"
               }`}>
               <div className="space-y-4">
                 {/* Artwork */}
-                <div className="relative group rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 aspect-square flex items-center justify-center p-4 shadow-xl">
+                <div className="relative group rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 aspect-square flex items-center justify-center p-3 sm:p-4 shadow-xl max-h-[300px] sm:max-h-none mx-auto w-full">
                   <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-blue-900/30 pointer-events-none" />
                   <img
                     src={BADGE_TIERS[2].image}
                     alt={BADGE_TIERS[2].name}
                     className="w-full h-full object-contain rounded-xl transform group-hover:scale-105 transition-transform duration-500 drop-shadow-[0_10px_25px_rgba(0,240,255,0.25)]"
                   />
-                  <div className="absolute top-3 left-3 bg-slate-950/90 backdrop-blur-md border border-slate-700 text-neon-cyan px-3 py-1 rounded-full text-[11px] font-bold shadow-md">
+                  <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 bg-slate-950/90 backdrop-blur-md border border-slate-700 text-neon-cyan px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-bold shadow-md">
                     Phase 2: {BADGE_TIERS[2].name}
                   </div>
                   {isTier2Claimed && (
-                    <div className="absolute top-3 right-3 bg-neon-green/90 text-slate-950 px-2.5 py-0.5 rounded-full text-[10px] font-black flex items-center space-x-1 shadow-md">
+                    <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 bg-neon-green/90 text-slate-950 px-2 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black flex items-center space-x-1 shadow-md">
                       <CheckCircle2 className="w-3 h-3" />
                       <span>CLAIMED</span>
                     </div>
@@ -545,22 +546,22 @@ export default function AttendeeHub() {
             {/* ============================================================= */}
             {/* TIER 3: VALIDATOR (PHASE 3 - TOP WINNERS, NO WAVES)           */}
             {/* ============================================================= */}
-            <div className={`cyber-glass rounded-3xl p-6 shadow-2xl relative border flex flex-col justify-between transition-all ${isTier3Claimed ? "border-neon-magenta/50 bg-pink-950/10" : "border-cyber-border/60 hover:border-neon-magenta/30"
+            <div className={`cyber-glass rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl relative border flex flex-col justify-between transition-all ${isTier3Claimed ? "border-neon-magenta/50 bg-pink-950/10" : "border-cyber-border/60 hover:border-neon-magenta/30"
               }`}>
               <div className="space-y-4">
                 {/* Artwork */}
-                <div className="relative group rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 aspect-square flex items-center justify-center p-4 shadow-xl">
+                <div className="relative group rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 aspect-square flex items-center justify-center p-3 sm:p-4 shadow-xl max-h-[300px] sm:max-h-none mx-auto w-full">
                   <div className="absolute inset-0 bg-gradient-to-br from-pink-500/20 to-purple-900/30 pointer-events-none" />
                   <img
                     src={BADGE_TIERS[3].image}
                     alt={BADGE_TIERS[3].name}
                     className="w-full h-full object-contain rounded-xl transform group-hover:scale-105 transition-transform duration-500 drop-shadow-[0_10px_25px_rgba(255,0,122,0.25)]"
                   />
-                  <div className="absolute top-3 left-3 bg-slate-950/90 backdrop-blur-md border border-slate-700 text-neon-magenta px-3 py-1 rounded-full text-[11px] font-bold shadow-md">
+                  <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 bg-slate-950/90 backdrop-blur-md border border-slate-700 text-neon-magenta px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-bold shadow-md">
                     Phase 3: {BADGE_TIERS[3].name}
                   </div>
                   {isTier3Claimed && (
-                    <div className="absolute top-3 right-3 bg-neon-green/90 text-slate-950 px-2.5 py-0.5 rounded-full text-[10px] font-black flex items-center space-x-1 shadow-md">
+                    <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 bg-neon-green/90 text-slate-950 px-2 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black flex items-center space-x-1 shadow-md">
                       <CheckCircle2 className="w-3 h-3" />
                       <span>CLAIMED</span>
                     </div>
@@ -690,15 +691,15 @@ export default function AttendeeHub() {
 
             {/* Confirmed Tx Hash Link */}
             {txHash && (
-              <div className="mt-4 pt-3 border-t border-slate-800 text-xs flex items-center justify-between">
+              <div className="mt-4 pt-3 border-t border-slate-800 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
                 <span className="text-slate-400">Confirmed Tx Hash:</span>
                 <a
                   href={`${NETWORK_CONFIG.blockExplorerUrl}/tx/${txHash}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="font-mono text-neon-cyan hover:underline flex items-center space-x-1 truncate max-w-xs"
+                  className="font-mono text-neon-cyan hover:underline flex items-center space-x-1.5 truncate max-w-full sm:max-w-xs"
                 >
-                  <span>{txHash}</span>
+                  <span className="truncate">{shortenAddress(txHash)}</span>
                   <ExternalLink className="w-3 h-3 shrink-0" />
                 </a>
               </div>

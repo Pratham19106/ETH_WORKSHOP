@@ -266,24 +266,24 @@ export default function VotingPage() {
 
       {/* Header Bar */}
       <header className="sticky top-0 z-40 backdrop-blur-md bg-cyber-void/80 border-b border-cyber-border/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-[84px] flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 sm:h-[84px] flex items-center justify-between">
 
-          <div className="flex items-center space-x-3.5">
+          <div className="flex items-center space-x-2.5 sm:space-x-3.5">
             <img
               src="/ETH_VJTI.jpg"
               alt="ETH VJTI Logo"
-              className="w-11 h-11 rounded-xl object-cover border border-eth-purple/40 shadow-md shadow-eth-purple/20 ring-2 ring-eth-purple/30"
+              className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-cover border border-eth-purple/40 shadow-md shadow-eth-purple/20 ring-2 ring-eth-purple/30 shrink-0"
             />
             <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-heading font-extrabold text-[1.35rem] tracking-tight text-white glow-magenta">
+              <div className="flex items-center space-x-1.5 sm:space-x-2">
+                <span className="font-heading font-extrabold text-lg sm:text-[1.35rem] tracking-tight text-white glow-magenta">
                   Voting Arena
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-eth-purple/20 text-purple-300 border border-eth-purple/40 font-bold">
+                <span className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full bg-eth-purple/20 text-purple-300 border border-eth-purple/40 font-bold">
                   On-Chain Poll
                 </span>
               </div>
-              <p className="text-[0.8rem] text-slate-400">
+              <p className="text-[11px] sm:text-[0.8rem] text-slate-400 max-w-[130px] sm:max-w-none truncate">
                 {currentCandidate ? `${currentCandidate.name} (${currentCandidate.reg_no})` : "Candidate Session Active"}
               </p>
             </div>
@@ -305,30 +305,31 @@ export default function VotingPage() {
           </div>
 
           {/* Connected Account & Actions */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             {account ? (
-              <div className="flex items-center space-x-2 bg-slate-900/90 border border-cyber-border/60 rounded-full p-1.5 pl-4 text-xs">
+              <div className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-900/90 border border-cyber-border/60 rounded-full p-1 sm:p-1.5 pl-2.5 sm:pl-4 text-[11px] sm:text-xs">
                 <button
                   onClick={switchNetwork}
-                  className={`flex items-center space-x-1 px-2.5 py-1 rounded-full font-medium ${isCorrectNetwork
+                  className={`flex items-center space-x-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-medium ${isCorrectNetwork
                     ? "bg-neon-green/10 text-neon-green border border-neon-green/30"
                     : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
                     }`}
                 >
-                  <Network className="w-3 h-3" />
-                  <span>{isCorrectNetwork ? `● ${NETWORK_CONFIG.chainName}` : "Switch Net"}</span>
+                  <Network className="w-3 h-3 shrink-0" />
+                  <span className="hidden xs:inline sm:inline">{isCorrectNetwork ? `● ${NETWORK_CONFIG.chainName}` : "Switch Net"}</span>
+                  <span className="xs:hidden sm:hidden">{isCorrectNetwork ? "● Base" : "Switch"}</span>
                 </button>
                 <span className="font-mono text-slate-300 font-bold">{shortenAddress(account)}</span>
-                <span className="bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-full text-slate-400 font-mono text-[11px]">
+                <span className="hidden sm:inline bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-full text-slate-400 font-mono text-[11px]">
                   {balance} ETH
                 </span>
               </div>
             ) : (
               <button
                 onClick={connect}
-                className="flex items-center space-x-2 bg-gradient-to-r from-eth-purple to-neon-magenta text-white font-bold px-4 py-2 rounded-full text-xs shadow-lg shadow-eth-purple/20 transition-all hover:scale-105"
+                className="flex items-center space-x-1.5 sm:space-x-2 bg-gradient-to-r from-eth-purple to-neon-magenta text-white font-bold px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs shadow-lg shadow-eth-purple/20 transition-all hover:scale-105 active:scale-95"
               >
-                <Wallet className="w-3.5 h-3.5" />
+                <Wallet className="w-3.5 h-3.5 shrink-0" />
                 <span>Connect Wallet</span>
               </button>
             )}
@@ -336,42 +337,42 @@ export default function VotingPage() {
             <button
               onClick={handleLogout}
               title="Logout Candidate"
-              className="p-2.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 transition-colors"
+              className="p-2 sm:p-2.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 transition-colors"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
             </button>
           </div>
         </div>
       </header>
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10 w-full flex-1 space-y-8 relative z-10">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-10 w-full flex-1 space-y-6 sm:space-y-8 relative z-10">
 
         {/* Mobile Navigation Pill */}
-        <div className="flex md:hidden items-center justify-center space-x-2 bg-slate-950/80 p-1 rounded-2xl border border-slate-800 max-w-xs mx-auto">
+        <div className="flex md:hidden items-center justify-center space-x-2 bg-slate-950/90 p-1 rounded-xl border border-slate-800 max-w-xs mx-auto shadow-md mb-2">
           <Link
             to="/hub"
-            className="flex-1 text-center py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white"
+            className="flex-1 text-center py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white"
           >
             NFT Badges
           </Link>
-          <div className="flex-1 text-center py-2 rounded-xl text-xs font-black bg-eth-purple/20 text-purple-300 border border-eth-purple/40">
+          <div className="flex-1 text-center py-2 rounded-lg text-xs font-black bg-eth-purple/20 text-purple-300 border border-eth-purple/40">
             Voting
           </div>
         </div>
 
         {/* Top Activity Banner */}
-        <div className="cyber-glass rounded-3xl p-6 sm:p-8 border border-cyber-border/60 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 rounded-2xl bg-eth-purple/15 border border-eth-purple/40 flex items-center justify-center text-eth-purple shadow-lg shadow-eth-purple/20">
-              <Vote className="w-8 h-8" />
+        <div className="cyber-glass rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-cyber-border/60 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6">
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-eth-purple/15 border border-eth-purple/40 flex items-center justify-center text-eth-purple shadow-lg shadow-eth-purple/20 shrink-0">
+              <Vote className="w-6 h-6 sm:w-8 sm:h-8" />
             </div>
             <div>
-              <div className="flex items-center space-x-2.5">
-                <h1 className="font-heading text-2xl font-black text-white">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="font-heading text-lg sm:text-2xl font-black text-white">
                   Workshop Decentralized Voting Activity
                 </h1>
-                <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase ${isVotingActive
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${isVotingActive
                   ? "bg-neon-green/20 text-neon-green border border-neon-green/40"
                   : "bg-rose-500/20 text-rose-400 border border-rose-500/40"
                   }`}>
@@ -385,21 +386,21 @@ export default function VotingPage() {
           </div>
 
           {/* User Voting Status Indicator */}
-          <div className="bg-slate-950/80 border border-slate-800 px-5 py-3 rounded-2xl text-left shrink-0">
+          <div className="bg-slate-950/80 border border-slate-800 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl text-left w-full sm:w-auto shrink-0">
             <span className="text-[10px] uppercase font-bold text-slate-500 block">Your Ballot Status</span>
             {userHasVoted ? (
               <span className="text-neon-green font-bold text-xs flex items-center space-x-1.5 mt-0.5">
-                <CheckCircle2 className="w-4 h-4" />
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
                 <span>Vote Cast for Option {userChoice}</span>
               </span>
             ) : !isVotingWaveReady ? (
               <span className="text-purple-400 font-bold text-xs flex items-center space-x-1.5 mt-0.5">
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
                 <span>Wave {attendeeWave} Queued (Active: W{activeVotingWave})</span>
               </span>
             ) : (
               <span className="text-amber-400 font-bold text-xs flex items-center space-x-1.5 mt-0.5">
-                <Radio className="w-4 h-4 animate-pulse" />
+                <Radio className="w-4 h-4 animate-pulse shrink-0" />
                 <span>Wave {attendeeWave} • Ready to Vote</span>
               </span>
             )}
@@ -409,13 +410,13 @@ export default function VotingPage() {
         {/* Centered Ballot Container (Distraction-Free, Zero Overwhelming Polling) */}
         <div className="max-w-2xl mx-auto space-y-6">
 
-          <div className="cyber-glass rounded-3xl p-6 sm:p-8 border border-cyber-border/60 shadow-2xl space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+          <div className="cyber-glass rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-cyber-border/60 shadow-2xl space-y-5 sm:space-y-6">
+            <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-800">
               <div className="flex items-center space-x-2">
-                <Sparkles className="w-5 h-5 text-eth-purple" />
-                <h3 className="font-heading text-lg font-bold text-white">Select Your Choice</h3>
+                <Sparkles className="w-5 h-5 text-eth-purple shrink-0" />
+                <h3 className="font-heading text-base sm:text-lg font-bold text-white">Select Your Choice</h3>
               </div>
-              <span className="text-xs text-slate-400 font-mono">1 Vote per Wallet</span>
+              <span className="text-[11px] sm:text-xs text-slate-400 font-mono">1 Vote per Wallet</span>
             </div>
 
             {/* The 4 Options Radio Cards */}
@@ -433,7 +434,7 @@ export default function VotingPage() {
                         setVoteError(null);
                       }
                     }}
-                    className={`p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden ${isUserPick
+                    className={`p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border transition-all cursor-pointer relative overflow-hidden active:scale-[0.99] ${isUserPick
                       ? "bg-neon-green/10 border-neon-green shadow-lg shadow-neon-green/10"
                       : isSelected
                         ? "bg-slate-900/90 border-eth-purple shadow-lg shadow-eth-purple/20 scale-[1.01]"
@@ -441,7 +442,7 @@ export default function VotingPage() {
                       } ${userHasVoted || !isVotingWaveReady ? "cursor-default" : ""}`}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start space-x-3.5">
+                      <div className="flex items-start space-x-3 sm:space-x-3.5">
                         {/* Radio Check Indicator */}
                         <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 mt-0.5 transition-all ${isUserPick
                           ? "border-neon-green bg-neon-green text-slate-950"
@@ -453,7 +454,7 @@ export default function VotingPage() {
                         </div>
 
                         <div>
-                          <h4 className="font-heading text-sm font-bold text-white flex items-center space-x-2">
+                          <h4 className="font-heading text-sm sm:text-base font-bold text-white flex flex-wrap items-center gap-1.5">
                             <span>{opt.title}</span>
                             {isUserPick && (
                               <span className="text-[10px] font-mono px-2 py-0.5 bg-neon-green/20 text-neon-green border border-neon-green/40 rounded-full font-black">
@@ -467,7 +468,7 @@ export default function VotingPage() {
                         </div>
                       </div>
 
-                      <span className="text-xs font-mono font-bold text-slate-500">
+                      <span className="text-xs font-mono font-bold text-slate-500 shrink-0">
                         #{opt.id}
                       </span>
                     </div>
@@ -524,7 +525,7 @@ export default function VotingPage() {
                 <button
                   onClick={handleCastVote}
                   disabled={!selectedOption || isVoting}
-                  className="w-full bg-gradient-to-r from-eth-purple via-indigo-600 to-neon-magenta hover:opacity-95 text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-eth-purple/25 flex items-center justify-center space-x-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full bg-gradient-to-r from-eth-purple via-indigo-600 to-neon-magenta hover:opacity-95 text-white font-black py-3.5 sm:py-4 px-4 sm:px-6 min-h-[50px] rounded-xl sm:rounded-2xl shadow-xl shadow-eth-purple/25 flex items-center justify-center space-x-2 transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-sm sm:text-base"
                 >
                   {isVoting ? (
                     <>
