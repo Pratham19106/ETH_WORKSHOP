@@ -232,6 +232,9 @@ export const dbService = {
   // Register or save new candidate
   saveCandidate: async (candidateData) => {
     const payload = {
+      has_claimed_badge: false,
+      tx_hash: null,
+      tier: 1,
       ...candidateData,
       wallet_address: candidateData.wallet_address.toLowerCase(),
     };

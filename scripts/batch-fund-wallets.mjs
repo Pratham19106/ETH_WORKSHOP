@@ -61,7 +61,7 @@ async function main() {
 
   // 3. Fetch candidates from Supabase
   console.log("\nFetching registered attendees from Supabase...");
-  const { createClient } = await import("../frontend/node_modules/@supabase/supabase-js/dist/main/index.js").catch(async () => {
+  const { createClient } = await import("../frontend/node_modules/@supabase/supabase-js/dist/index.mjs").catch(async () => {
     return await import("@supabase/supabase-js");
   });
 

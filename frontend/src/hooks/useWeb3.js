@@ -239,6 +239,31 @@ export function useWeb3() {
     }
   };
 
+  // Query the minted tokenId owned by user for a specific tier
+  const getUserTokenIdForTier = async (tier, userAddress = account) => {
+    if (!userAddress || !tier) return null;
+    try {
+      const [totalResult] = await safeEthCall("totalSupply", []);
+      const total = Number(totalResult || 0n);
+      for (let id = total; id >= 1; id--) {
+        try {
+          const [owner] = await safeEthCall("ownerOf", [id]);
+          if (owner && owner.toLowerCase() === userAddress.toLowerCase()) {
+            const [tokenTierResult] = await safeEthCall("tokenTier", [id]);
+            if (Number(tokenTierResult) === Number(tier)) {
+              return id;
+            }
+          }
+        } catch {
+          // Token query error, continue scanning
+        }
+      }
+    } catch (err) {
+      console.warn(`Could not resolve tokenId for tier ${tier}:`, err.message);
+    }
+    return null;
+  };
+
   // Mint Badge Transaction for Specific Tier
   const mintBadgeTx = async (tier, onStatusChange) => {
     setError(null);
@@ -352,6 +377,7 @@ export function useWeb3() {
     checkHasMintedOnChain,
     checkHasMintedTierOnChain,
     checkHasFullSetOnChain,
+    getUserTokenIdForTier,
     mintBadgeTx,
   };
 }

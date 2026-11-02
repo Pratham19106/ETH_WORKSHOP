@@ -104,6 +104,7 @@ export const VJTITIEREDBADGE_ABI = [
   "function tokenTier(uint256 tokenId) external view returns (uint8)",
   "function tierURIs(uint8 tier) external view returns (string)",
   "function tokenURI(uint256 tokenId) external view returns (string)",
+  "function ownerOf(uint256 tokenId) external view returns (address)",
   "function owner() external view returns (address)",
 
   "function mintBadge(uint8 tier) external returns (uint256)",

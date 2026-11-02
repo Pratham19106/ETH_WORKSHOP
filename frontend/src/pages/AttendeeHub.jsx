@@ -39,7 +39,8 @@ export default function AttendeeHub() {
     switchNetwork,
     mintBadgeTx,
     checkHasMintedTierOnChain,
-    checkHasFullSetOnChain
+    checkHasFullSetOnChain,
+    getUserTokenIdForTier
   } = useWeb3();
 
   // Active Candidate Session state
@@ -71,7 +72,16 @@ export default function AttendeeHub() {
   });
 
   // TanStack Query 2: Fetch Current Candidate Profile & Level
-  const targetWallet = account || candidate?.wallet_address;
+  // Target wallet: candidate session wallet if logged in, fallback to connected MetaMask account
+  const targetWallet = candidate?.wallet_address || account;
+
+  // Detect wallet mismatch if connected MetaMask account differs from logged-in candidate
+  const isWalletMismatch = Boolean(
+    account &&
+    candidate?.wallet_address &&
+    account.toLowerCase() !== candidate.wallet_address.toLowerCase()
+  );
+
   const { data: currentCandidate = candidate, refetch: refetchCandidate } = useQuery({
     queryKey: ["candidate", targetWallet],
     queryFn: () => dbService.getCandidate(targetWallet),
@@ -80,8 +90,8 @@ export default function AttendeeHub() {
     refetchInterval: 4000,
   });
 
-  // TanStack Query 3: On-Chain Mint Status for all 3 Tiers
-  const { data: onChainClaims = { 1: false, 2: false, 3: false }, refetch: refetchOnChainClaims } = useQuery({
+  // TanStack Query 3: On-Chain Mint Status for all 3 Tiers (Source of Truth)
+  const { data: onChainClaims = { 1: false, 2: false, 3: false }, isLoading: isOnChainLoading, refetch: refetchOnChainClaims } = useQuery({
     queryKey: ["on_chain_claims", targetWallet],
     queryFn: async () => {
       if (!targetWallet) return { 1: false, 2: false, 3: false };
@@ -91,7 +101,7 @@ export default function AttendeeHub() {
           checkHasMintedTierOnChain(2, targetWallet),
           checkHasMintedTierOnChain(3, targetWallet),
         ]);
-        return { 1: t1, 2: t2, 3: t3 };
+        return { 1: Boolean(t1), 2: Boolean(t2), 3: Boolean(t3) };
       } catch (e) {
         return { 1: false, 2: false, 3: false };
       }
@@ -100,13 +110,40 @@ export default function AttendeeHub() {
     refetchInterval: 5000,
   });
 
+  // Auto-sync Supabase & local session state with on-chain reality
+  useEffect(() => {
+    if (!targetWallet || !currentCandidate || isOnChainLoading) return;
+
+    // Case 1: Wallet has minted on-chain, but Supabase is not marked -> sync to true
+    if (onChainClaims[1] === true && !currentCandidate.has_claimed_badge) {
+      dbService.updateCandidate(targetWallet, { has_claimed_badge: true });
+    }
+
+    // Case 2: Stale DB flag from previous contract deployment: on-chain is false, but DB is true
+    if (onChainClaims[1] === false && currentCandidate.has_claimed_badge && mintStatus === "Idle") {
+      dbService.updateCandidate(targetWallet, { has_claimed_badge: false, tx_hash: null });
+      const sessionUserStr = localStorage.getItem("vjti_eth_user");
+      if (sessionUserStr) {
+        try {
+          const parsed = JSON.parse(sessionUserStr);
+          if (parsed.wallet_address?.toLowerCase() === targetWallet.toLowerCase()) {
+            parsed.has_claimed_badge = false;
+            parsed.tx_hash = null;
+            localStorage.setItem("vjti_eth_user", JSON.stringify(parsed));
+            setCandidate(parsed);
+          }
+        } catch (e) {}
+      }
+    }
+  }, [onChainClaims, currentCandidate, targetWallet, isOnChainLoading, mintStatus]);
+
   // Anti-throttling wave for Phase 1
   const attendeeWave = getCandidateWave(currentCandidate);
   const activeWave = typeof settings.active_wave === "number" ? settings.active_wave : 99;
   const isWave1Ready = activeWave === 99 || activeWave >= attendeeWave;
 
-  // Calculation of collected badges
-  const isTier1Claimed = Boolean(onChainClaims[1] || currentCandidate?.has_claimed_badge);
+  // Calculation of collected badges (Strictly driven by on-chain status)
+  const isTier1Claimed = Boolean(onChainClaims[1]);
   const isTier2Claimed = Boolean(onChainClaims[2]);
   const isTier3Claimed = Boolean(onChainClaims[3]);
 
@@ -118,6 +155,14 @@ export default function AttendeeHub() {
     setActiveMintTier(tierId);
     setMintError(null);
     setTxHash(null);
+
+    // 0. Verify connected wallet matches registered profile
+    if (isWalletMismatch) {
+      setMintError(
+        `MetaMask account mismatch: Connected to ${shortenAddress(account)}, but your registered profile is ${shortenAddress(candidate?.wallet_address)}. Please switch accounts in MetaMask to mint.`
+      );
+      return;
+    }
 
     // 1. Global pause validation
     if (settings.badge_claim_active === false) {
@@ -183,13 +228,26 @@ export default function AttendeeHub() {
   const handleWatchAsset = async (tierId = 1) => {
     if (!window.ethereum) return;
     try {
+      // Find the user's specific minted tokenId on Base Sepolia
+      let resolvedTokenId = null;
+      try {
+        const activeWallet = targetWallet || account;
+        if (activeWallet) {
+          resolvedTokenId = await getUserTokenIdForTier(tierId, activeWallet);
+        }
+      } catch (e) {
+        console.warn("Could not query on-chain tokenId:", e);
+      }
+
+      const targetId = resolvedTokenId ? String(resolvedTokenId) : String(tierId);
+
       await window.ethereum.request({
         method: "wallet_watchAsset",
         params: {
           type: "ERC721",
           options: {
             address: CONTRACT_ADDRESS,
-            tokenId: String(tierId),
+            tokenId: targetId,
           },
         },
       });
@@ -229,12 +287,10 @@ export default function AttendeeHub() {
                 <span className="font-heading font-extrabold text-lg sm:text-[1.35rem] tracking-tight text-white glow-cyan">
                   Attendee Hub
                 </span>
-                <span className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/30 font-bold">
-                  Base Sepolia
-                </span>
+                
               </div>
               <p className="text-[11px] sm:text-[0.8rem] text-slate-400 max-w-[130px] sm:max-w-none truncate">
-                {currentCandidate ? `${currentCandidate.name} (${currentCandidate.reg_no})` : "Candidate Session Active"}
+                {currentCandidate ? `${currentCandidate.name}` : "Candidate Session Active"}
               </p>
             </div>
           </div>
@@ -257,10 +313,10 @@ export default function AttendeeHub() {
           {/* Connected Account & Actions */}
           <div className="flex items-center space-x-2 sm:space-x-3">
             {account ? (
-              <div className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-900/90 border border-cyber-border/60 rounded-full p-1 sm:p-1.5 pl-2.5 sm:pl-4 text-[11px] sm:text-xs">
+              <div className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-900/90 border border-cyber-border/60 rounded-full p-1 sm:p-1.5  text-[11px] sm:text-xs">
                 <button
                   onClick={switchNetwork}
-                  className={`flex items-center space-x-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-medium ${isCorrectNetwork
+                  className={`flex items-center px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-medium ${isCorrectNetwork
                     ? "bg-neon-green/10 text-neon-green border border-neon-green/30"
                     : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
                     }`}
@@ -269,7 +325,6 @@ export default function AttendeeHub() {
                   <span className="hidden xs:inline sm:inline">{isCorrectNetwork ? `● ${NETWORK_CONFIG.chainName}` : "Switch Net"}</span>
                   <span className="xs:hidden sm:hidden">{isCorrectNetwork ? "● Base" : "Switch"}</span>
                 </button>
-                <span className="font-mono text-slate-300 font-bold">{shortenAddress(account)}</span>
                 <span className="hidden sm:inline bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-full text-slate-400 font-mono text-[11px]">
                   {balance} ETH
                 </span>
@@ -296,7 +351,7 @@ export default function AttendeeHub() {
       </header>
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 pt-24 sm:pt-20 pb-10 w-full flex-1 space-y-6 sm:space-y-8 relative z-10">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 pt-10 sm:pt-20 pb-10 w-full flex-1 space-y-6 sm:space-y-8 relative z-10">
 
         {/* Absolute Top-Right Badges Score Counter (Always on top) */}
         <div className="absolute top-3 right-3 sm:top-4 sm:right-6 z-30 flex items-center space-x-2 sm:space-x-3 bg-slate-950/90 border border-slate-800 px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl shadow-xl backdrop-blur-md">
@@ -335,6 +390,25 @@ export default function AttendeeHub() {
             <p className="text-xs text-amber-200/90 max-w-2xl mx-auto font-mono">
               Congratulations {currentCandidate?.name || "Candidate"}! You hold the Light Node, Synced Node, and Validator badges. You have achieved maximum decentralized mastery in the ETH VJTI Workshop!
             </p>
+          </div>
+        )}
+
+        {/* Wallet Mismatch Warning Banner */}
+        {isWalletMismatch && (
+          <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/15 border-2 border-amber-500/40 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-200">
+            <div className="flex items-start sm:items-center space-x-3">
+              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5 sm:mt-0" />
+              <div className="text-xs sm:text-sm">
+                <span className="font-bold text-amber-300">Active Wallet Mismatch: </span>
+                MetaMask is connected to <span className="font-mono font-bold text-white bg-slate-900 px-1.5 py-0.5 rounded">{shortenAddress(account)}</span>, but your registered profile is linked to <span className="font-mono font-bold text-white bg-slate-900 px-1.5 py-0.5 rounded">{shortenAddress(candidate?.wallet_address)}</span>. Please switch accounts in MetaMask to mint your badges.
+              </div>
+            </div>
+            <button
+              onClick={() => connect()}
+              className="self-start sm:self-auto shrink-0 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold px-3 py-1.5 rounded-xl text-xs transition-all"
+            >
+              Switch Account
+            </button>
           </div>
         )}
 

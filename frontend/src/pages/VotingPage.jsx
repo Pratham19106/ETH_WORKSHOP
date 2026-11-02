@@ -279,12 +279,10 @@ export default function VotingPage() {
                 <span className="font-heading font-extrabold text-lg sm:text-[1.35rem] tracking-tight text-white glow-magenta">
                   Voting Arena
                 </span>
-                <span className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full bg-eth-purple/20 text-purple-300 border border-eth-purple/40 font-bold">
-                  On-Chain Poll
-                </span>
+
               </div>
               <p className="text-[11px] sm:text-[0.8rem] text-slate-400 max-w-[130px] sm:max-w-none truncate">
-                {currentCandidate ? `${currentCandidate.name} (${currentCandidate.reg_no})` : "Candidate Session Active"}
+                {currentCandidate ? `${currentCandidate.name}` : "Candidate Session Active"}
               </p>
             </div>
           </div>
@@ -307,7 +305,7 @@ export default function VotingPage() {
           {/* Connected Account & Actions */}
           <div className="flex items-center space-x-2 sm:space-x-3">
             {account ? (
-              <div className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-900/90 border border-cyber-border/60 rounded-full p-1 sm:p-1.5 pl-2.5 sm:pl-4 text-[11px] sm:text-xs">
+              <div className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-900/90 border border-cyber-border/60 rounded-full p-1 sm:p-1.5 text-[11px] sm:text-xs">
                 <button
                   onClick={switchNetwork}
                   className={`flex items-center space-x-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-medium ${isCorrectNetwork
@@ -319,7 +317,7 @@ export default function VotingPage() {
                   <span className="hidden xs:inline sm:inline">{isCorrectNetwork ? `● ${NETWORK_CONFIG.chainName}` : "Switch Net"}</span>
                   <span className="xs:hidden sm:hidden">{isCorrectNetwork ? "● Base" : "Switch"}</span>
                 </button>
-                <span className="font-mono text-slate-300 font-bold">{shortenAddress(account)}</span>
+
                 <span className="hidden sm:inline bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-full text-slate-400 font-mono text-[11px]">
                   {balance} ETH
                 </span>
@@ -346,7 +344,7 @@ export default function VotingPage() {
       </header>
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-10 w-full flex-1 space-y-6 sm:space-y-8 relative z-10">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 py-6 pt-10 sm:py-10 w-full flex-1 space-y-6 sm:space-y-8 relative z-10">
 
         {/* Mobile Navigation Pill */}
         <div className="flex md:hidden items-center justify-center space-x-2 bg-slate-950/90 p-1 rounded-xl border border-slate-800 max-w-xs mx-auto shadow-md mb-2">
