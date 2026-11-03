@@ -42,6 +42,7 @@ import {
   getVotingContractAddress,
   setDynamicVotingContractAddress
 } from "../config/network";
+import { VOTING_OPTIONS, VOTING_QUESTION } from "../config/voting";
 import { rpcManager, RPC_ENDPOINTS } from "../lib/rpcManager";
 import BlockchainBackgroundAccents from "../components/BlockchainBackgroundAccents";
 import { parseEther, BrowserProvider, JsonRpcProvider } from "ethers";
@@ -1209,25 +1210,28 @@ export default function AdminDashboard() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { id: 1, label: "Option 1", desc: "Rollups & Layer 2" },
-                { id: 2, label: "Option 2", desc: "Smart Contract Security" },
-                { id: 3, label: "Option 3", desc: "DeFi Infrastructure" },
-                { id: 4, label: "Option 4", desc: "Zero-Knowledge Proofs" },
-              ].map((opt, idx) => {
+              {VOTING_OPTIONS.map((opt, idx) => {
                 const count = voteTallies[idx] || 0;
                 const percentage = totalVotesCount > 0 ? Math.round((count / totalVotesCount) * 100) : 0;
 
                 return (
-                  <div key={opt.id} className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white">{opt.label}</span>
-                      <span className="font-mono text-xs font-bold text-purple-400">{count} votes ({percentage}%)</span>
+                  <div key={opt.id} className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 space-y-3">
+                    <div className="flex items-center space-x-3">
+                      {opt.image && (
+                        <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-900 border border-slate-800 p-1 shrink-0 flex items-center justify-center">
+                          <img src={opt.image} alt={opt.title} className="w-full h-full object-contain rounded-lg" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-white truncate" title={opt.title}>{opt.title}</span>
+                        </div>
+                        <span className="font-mono text-[11px] font-bold text-purple-400">{count} votes ({percentage}%)</span>
+                      </div>
                     </div>
-                    <p className="text-[11px] text-slate-400 truncate">{opt.desc}</p>
                     <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
                       <div
-                        className="h-full bg-gradient-to-r from-purple-500 to-neon-magenta rounded-full transition-all duration-500"
+                        className={`h-full bg-gradient-to-r ${opt.gradient || "from-purple-500 to-neon-magenta"} rounded-full transition-all duration-500`}
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
@@ -1416,13 +1420,18 @@ export default function AdminDashboard() {
                   .map((c) => (
                     <div key={c.id || c.wallet_address} className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 text-xs space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-slate-200 truncate pr-2">{c.name}</span>
-                        <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-eth-purple/20 text-purple-300 border border-purple-500/30 font-bold">
-                          Opt {c.voted_option}
+                        <span className="font-bold text-slate-200 flex items-center space-x-1.5 truncate">
+                          <Vote className="w-3.5 h-3.5 text-eth-purple shrink-0" />
+                          <span className="truncate">
+                            {VOTING_OPTIONS.find(o => o.id === c.voted_option)?.title || `Option ${c.voted_option}`}
+                          </span>
+                        </span>
+                        <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-eth-purple/20 text-purple-300 border border-purple-500/30 font-bold shrink-0 ml-2">
+                          Anonymous
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-[11px] text-slate-500 font-mono">
-                        <span>Wave {getCandidateWave(c)}</span>
+                      <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                        <span>Verified Tx:</span>
                         {c.vote_tx_hash ? (
                           <a
                             href={`${NETWORK_CONFIG.blockExplorerUrl}/tx/${c.vote_tx_hash}`}
@@ -1559,23 +1568,22 @@ export default function AdminDashboard() {
                         <td className="py-3.5 px-4">
                           {c.voted_option ? (
                             <div className="flex items-center space-x-1.5">
-                              <span className="px-2 py-0.5 rounded-full bg-eth-purple/20 text-purple-300 border border-purple-500/40 font-bold text-[10px]">
-                                Opt {c.voted_option}
+                              <span className="px-2 py-0.5 rounded-full bg-neon-green/10 text-neon-green border border-neon-green/30 font-bold text-[10px] inline-flex items-center space-x-1">
+                                <CheckCircle2 className="w-3 h-3 text-neon-green" />
+                                <span>Voted</span>
                               </span>
                               {c.vote_tx_hash ? (
                                 <a
                                   href={`${NETWORK_CONFIG.blockExplorerUrl}/tx/${c.vote_tx_hash}`}
                                   target="_blank"
                                   rel="noreferrer"
-                                  title="Inspect transaction on Basescan / Etherscan"
+                                  title="Inspect anonymous transaction on Base Sepolia"
                                   className="text-neon-cyan hover:underline flex items-center space-x-0.5 text-[10px] bg-cyan-950/40 px-1.5 py-0.5 rounded border border-cyan-500/30"
                                 >
                                   <span>tx</span>
                                   <ExternalLink className="w-2.5 h-2.5" />
                                 </a>
-                              ) : (
-                                <span className="text-[10px] text-slate-500">verified</span>
-                              )}
+                              ) : null}
                             </div>
                           ) : (
                             <span className="text-slate-600 text-[10px] font-mono">Not Voted</span>

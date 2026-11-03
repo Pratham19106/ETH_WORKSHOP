@@ -29,44 +29,9 @@ import {
   getVotingContractAddress,
   VJTIWORKSHOPVOTING_ABI
 } from "../config/network";
+import { VOTING_OPTIONS, VOTING_QUESTION } from "../config/voting";
 import BlockchainBackgroundAccents from "../components/BlockchainBackgroundAccents";
 import { BrowserProvider, JsonRpcProvider, Contract } from "ethers";
-
-// 4 Voting Options Definitions
-export const VOTING_OPTIONS = [
-  {
-    id: 1,
-    title: "Option 1: Decentralized Rollups & Layer 2",
-    subtitle: "Scaling Ethereum with optimistic and zero-knowledge rollups",
-    badgeColor: "border-cyan-500/40 bg-cyan-950/20 text-neon-cyan",
-    accentColor: "#00F0FF",
-    gradient: "from-cyan-500 to-blue-600",
-  },
-  {
-    id: 2,
-    title: "Option 2: Smart Contract Auditing & Security",
-    subtitle: "Reentrancy, access controls, formal verification & invariant testing",
-    badgeColor: "border-purple-500/40 bg-purple-950/20 text-purple-400",
-    accentColor: "#A855F7",
-    gradient: "from-purple-500 to-indigo-600",
-  },
-  {
-    id: 3,
-    title: "Option 3: DeFi Infrastructure & Automated Market Makers",
-    subtitle: "Liquidity pools, flash loans, and decentralized financial primitives",
-    badgeColor: "border-amber-500/40 bg-amber-950/20 text-amber-400",
-    accentColor: "#F59E0B",
-    gradient: "from-amber-500 to-orange-600",
-  },
-  {
-    id: 4,
-    title: "Option 4: Zero-Knowledge Proofs & Privacy",
-    subtitle: "zk-SNARKs, validity proofs, and cryptographic identity on EVM",
-    badgeColor: "border-neon-magenta/40 bg-pink-950/20 text-neon-magenta",
-    accentColor: "#FF007A",
-    gradient: "from-pink-500 to-rose-600",
-  },
-];
 
 export default function AdminLiveResultsPage() {
   const navigate = useNavigate();
@@ -194,17 +159,14 @@ export default function AdminLiveResultsPage() {
           });
         }
 
-        // Collect recent votes
+        // Collect recent votes (Anonymous: only option and on-chain tx hash)
         candidates
           .filter(c => c.voted_option)
           .slice(0, 8)
           .forEach(c => {
             recentVotes.push({
-              name: c.name || "Candidate",
-              reg_no: c.reg_no || "",
               voted_option: c.voted_option,
               vote_tx_hash: c.vote_tx_hash,
-              wallet_address: c.wallet_address,
             });
           });
       } catch (err) {
@@ -431,6 +393,28 @@ export default function AdminLiveResultsPage() {
 
         </div>
 
+        {/* Live Question Display Banner */}
+        <div className="cyber-glass rounded-3xl p-6 sm:p-7 border border-eth-purple/40 bg-gradient-to-r from-purple-950/40 via-slate-950/80 to-purple-950/40 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-2xl shrink-0 shadow-lg shadow-rose-500/10">
+              🚩
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-bold text-purple-400 tracking-wider flex items-center space-x-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-eth-purple" />
+                <span>Auditorium Live Question</span>
+              </span>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white font-heading tracking-tight mt-0.5">
+                {VOTING_QUESTION}
+              </h2>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2 px-3.5 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-mono shrink-0">
+            <Radio className="w-3.5 h-3.5 animate-pulse text-neon-cyan" />
+            <span>Real-time On-Chain Feed</span>
+          </div>
+        </div>
+
         {/* 2. The 4 Option Live Stage Cards (2x2 Grid) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {VOTING_OPTIONS.map((opt, idx) => {
@@ -469,14 +453,21 @@ export default function AdminLiveResultsPage() {
                     )}
                   </div>
 
-                  {/* Title & Description */}
-                  <div>
-                    <h3 className="font-heading text-lg sm:text-xl font-bold text-white tracking-tight">
-                      {opt.title}
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                      {opt.subtitle}
-                    </p>
+                  {/* Option Image Beside Title & Subtitle */}
+                  <div className="flex items-start gap-4">
+                    {opt.image && (
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-slate-900 border border-slate-700/80 shrink-0 p-1.5 flex items-center justify-center shadow-lg">
+                        <img src={opt.image} alt={opt.title} className="w-full h-full object-contain rounded-xl" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-heading text-lg sm:text-xl font-bold text-white tracking-tight">
+                        {opt.title}
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                        {opt.subtitle}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -526,27 +517,32 @@ export default function AdminLiveResultsPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               {votingStats.recentVotes.map((v, i) => (
-                <div key={i} className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 text-xs space-y-1">
+                <div key={i} className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 text-xs space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-200 truncate pr-2">{v.name}</span>
-                    <span className="font-mono text-[10px] px-1.5 py-0.5 bg-eth-purple/20 text-purple-300 rounded border border-purple-500/30 font-bold">
-                      Opt {v.voted_option}
+                    <span className="font-bold text-slate-200 flex items-center space-x-1.5 truncate">
+                      <Vote className="w-3.5 h-3.5 text-eth-purple shrink-0" />
+                      <span className="truncate">
+                        {VOTING_OPTIONS.find(o => o.id === v.voted_option)?.title || `Option ${v.voted_option}`}
+                      </span>
+                    </span>
+                    <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-eth-purple/20 text-purple-300 border border-purple-500/30 font-bold">
+                      Anonymous
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 font-mono">
-                    <span>{v.reg_no || "Attendee"}</span>
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                    <span>Verified Tx:</span>
                     {v.vote_tx_hash ? (
                       <a
                         href={`${NETWORK_CONFIG.blockExplorerUrl}/tx/${v.vote_tx_hash}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-neon-cyan hover:underline flex items-center space-x-0.5"
+                        className="text-neon-cyan hover:underline flex items-center space-x-1 bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-500/30 font-bold"
                       >
-                        <span>tx</span>
+                        <span>{v.vote_tx_hash.slice(0, 6)}...{v.vote_tx_hash.slice(-4)}</span>
                         <ExternalLink className="w-2.5 h-2.5" />
                       </a>
                     ) : (
-                      <span className="text-neon-green">verified</span>
+                      <span className="text-neon-green">Confirmed</span>
                     )}
                   </div>
                 </div>

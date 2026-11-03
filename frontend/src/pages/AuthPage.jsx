@@ -452,8 +452,9 @@ export default function AuthPage() {
                     >
                       <option value="Computer Engineering" className="bg-slate-950 text-white">Computer Engineering</option>
                       <option value="Information Technology" className="bg-slate-950 text-white">Information Technology</option>
-                      <option value="Electronics & Telecom" className="bg-slate-950 text-white">Electronics & Telecom</option>
+                      <option value="Electronics & Telecom" className="bg-slate-950 text-white">Electronics & Telecommunication</option>
                       <option value="Electrical Engineering" className="bg-slate-950 text-white">Electrical Engineering</option>
+                       <option value="Electrical Engineering" className="bg-slate-950 text-white">Electronics Engineering</option>
                       <option value="Mechanical Engineering" className="bg-slate-950 text-white">Mechanical Engineering</option>
                       <option value="Civil Engineering" className="bg-slate-950 text-white">Civil Engineering</option>
                       <option value="Production Engineering" className="bg-slate-950 text-white">Production Engineering</option>

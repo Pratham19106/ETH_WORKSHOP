@@ -25,40 +25,9 @@ import {
   getVotingContractAddress,
   VJTIWORKSHOPVOTING_ABI
 } from "../config/network";
+import { VOTING_OPTIONS, VOTING_QUESTION } from "../config/voting";
 import BlockchainBackgroundAccents from "../components/BlockchainBackgroundAccents";
 import { BrowserProvider, Contract } from "ethers";
-
-// Default Voting Option Definitions (Can represent speakers, projects, or workshop tracks)
-const VOTING_OPTIONS = [
-  {
-    id: 1,
-    title: "Option 1: Decentralized Rollups & Layer 2",
-    subtitle: "Scaling Ethereum with optimistic and zero-knowledge rollups",
-    badgeColor: "border-cyan-500/40 bg-cyan-950/20 text-neon-cyan",
-    accentColor: "#00F0FF",
-  },
-  {
-    id: 2,
-    title: "Option 2: Smart Contract Auditing & Security",
-    subtitle: "Reentrancy, access controls, formal verification & invariant testing",
-    badgeColor: "border-purple-500/40 bg-purple-950/20 text-purple-400",
-    accentColor: "#A855F7",
-  },
-  {
-    id: 3,
-    title: "Option 3: DeFi Infrastructure & Automated Market Makers",
-    subtitle: "Liquidity pools, flash loans, and decentralized financial primitives",
-    badgeColor: "border-amber-500/40 bg-amber-950/20 text-amber-400",
-    accentColor: "#F59E0B",
-  },
-  {
-    id: 4,
-    title: "Option 4: Zero-Knowledge Proofs & Privacy",
-    subtitle: "zk-SNARKs, validity proofs, and cryptographic identity on EVM",
-    badgeColor: "border-neon-magenta/40 bg-pink-950/20 text-neon-magenta",
-    accentColor: "#FF007A",
-  },
-];
 
 export default function VotingPage() {
   const navigate = useNavigate();
@@ -368,7 +337,7 @@ export default function VotingPage() {
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="font-heading text-lg sm:text-2xl font-black text-white">
-                  Workshop Decentralized Voting Activity
+                  {VOTING_QUESTION}
                 </h1>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${isVotingActive
                   ? "bg-neon-green/20 text-neon-green border border-neon-green/40"
@@ -378,7 +347,7 @@ export default function VotingPage() {
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
-                Cast your verified vote on Base Sepolia. Each workshop participant can vote for one of the 4 options. All results are tallied directly on-chain.
+                Cast your verified vote on Base Sepolia. 1 anonymous vote per wallet — all results are tallied directly on-chain.
               </p>
             </div>
           </div>
@@ -389,7 +358,7 @@ export default function VotingPage() {
             {userHasVoted ? (
               <span className="text-neon-green font-bold text-xs flex items-center space-x-1.5 mt-0.5">
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>Vote Cast for Option {userChoice}</span>
+                <span>Vote Cast: Option {userChoice}</span>
               </span>
             ) : !isVotingWaveReady ? (
               <span className="text-purple-400 font-bold text-xs flex items-center space-x-1.5 mt-0.5">
@@ -412,7 +381,7 @@ export default function VotingPage() {
             <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-800">
               <div className="flex items-center space-x-2">
                 <Sparkles className="w-5 h-5 text-eth-purple shrink-0" />
-                <h3 className="font-heading text-base sm:text-lg font-bold text-white">Select Your Choice</h3>
+                <h3 className="font-heading text-base sm:text-lg font-bold text-white">Choose Your Biggest Red Flag</h3>
               </div>
               <span className="text-[11px] sm:text-xs text-slate-400 font-mono">1 Vote per Wallet</span>
             </div>
@@ -439,10 +408,10 @@ export default function VotingPage() {
                         : "bg-slate-950/60 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/40"
                       } ${userHasVoted || !isVotingWaveReady ? "cursor-default" : ""}`}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start space-x-3 sm:space-x-3.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center space-x-3 sm:space-x-3.5">
                         {/* Radio Check Indicator */}
-                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 mt-0.5 transition-all ${isUserPick
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${isUserPick
                           ? "border-neon-green bg-neon-green text-slate-950"
                           : isSelected
                             ? "border-eth-purple bg-eth-purple text-white"
@@ -451,7 +420,12 @@ export default function VotingPage() {
                           {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
                         </div>
 
-                        <div>
+                        {/* Option Image Beside Title */}
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-slate-900 border border-slate-700/80 shrink-0 p-1 flex items-center justify-center shadow-md">
+                          <img src={opt.image} alt={opt.title} className="w-full h-full object-contain rounded-lg" />
+                        </div>
+
+                        <div className="text-left">
                           <h4 className="font-heading text-sm sm:text-base font-bold text-white flex flex-wrap items-center gap-1.5">
                             <span>{opt.title}</span>
                             {isUserPick && (
@@ -460,7 +434,7 @@ export default function VotingPage() {
                               </span>
                             )}
                           </h4>
-                          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                          <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
                             {opt.subtitle}
                           </p>
                         </div>
